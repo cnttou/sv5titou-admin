@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /news/{idDoc} {
+      allow read;
+      allow write: if request.auth.uid == 'bqiHeUsh3ASyhQshMsVpbdfwx3o1';
+    }
+    match /register_activity/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth.uid == 'bqiHeUsh3ASyhQshMsVpbdfwx3o1';
+      
+      match /activities/{acId} {
+    		allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      	allow read, write: if request.auth != null;
+      	allow read, write: if request.auth.uid == 'bqiHeUsh3ASyhQshMsVpbdfwx3o1';
+    	}
+    }
+  }
+}

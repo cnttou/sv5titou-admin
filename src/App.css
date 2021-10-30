@@ -1,0 +1,172 @@
+/* body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+} */
+@import 'antd/lib/style/index.css';
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+.header {
+	margin: 20px 0;
+	padding: 0;
+}
+/* For all use */
+.require:after {
+	content: ' *';
+	color: red;
+}
+
+a {
+	text-decoration: none;
+}
+
+#root {
+	background-color: #f0f2f5;
+}
+/* Admin Login CSS */
+.AdminLogin {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -70%);
+	box-shadow: 0px 0px 15px #0008;
+	padding: 15px;
+	max-width: 500px;
+	border-radius: 10px;
+}
+.image-proof__content {
+	position: relative;
+}
+.image-proof__content > button {
+	position: absolute;
+	top: 0;
+	right: 0;
+	background-color: wheat;
+}
+.image-proof {
+	object-fit: contain;
+	width: 100%;
+}
+.ql-editor {
+	padding-left: 0 !important;
+	padding-right: 0 !important;
+}
+.ql-editor > p {
+	text-overflow: ellipsis;
+}
+.ql-editor img {
+	width: 100%;
+}
+.wrapper-loading {
+	width: 100%;
+	min-height: 500px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.modeUseModel {
+	max-width: calc(100vw - 305px);
+}
+@media screen and (max-width: 500px) {
+	.modeUseModel {
+		max-width: 95vw;
+	}
+	.AdminLogin {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		box-shadow: none;
+		padding: 15px;
+		max-width: 500px;
+		width: 100%;
+		border-radius: none;
+	}
+	.table-news thead th:nth-child(n + 4) {
+		display: none;
+	}
+	.table-news tbody td:nth-child(n + 4) {
+		display: none;
+	}
+	.table-register-activity th:nth-child(3) {
+		display: none;
+	}
+	.table-register-activity td:nth-child(3) {
+		display: none;
+	}
+	.btn-group {
+		flex-direction: column;
+		border-radius: none;
+	}
+}
+
+.RichEditor-root {
+	background: #fff;
+	border: 1px solid #ddd;
+	font-family: 'Georgia', serif;
+	font-size: 14px;
+	padding: 15px;
+}
+
+.RichEditor-editor {
+	border-top: 1px solid #ddd;
+	cursor: text;
+	font-size: 16px;
+	margin-top: 10px;
+}
+
+.RichEditor-editor .public-DraftEditorPlaceholder-root,
+.RichEditor-editor .public-DraftEditor-content {
+	margin: 0 -15px -15px;
+	padding: 15px;
+}
+
+.RichEditor-editor .public-DraftEditor-content {
+	min-height: 100px;
+}
+
+.RichEditor-hidePlaceholder .public-DraftEditorPlaceholder-root {
+	display: none;
+}
+
+.RichEditor-editor .RichEditor-blockquote {
+	border-left: 5px solid #eee;
+	color: #666;
+	font-family: 'Hoefler Text', 'Georgia', serif;
+	font-style: italic;
+	margin: 16px 0;
+	padding: 10px 20px;
+}
+
+.RichEditor-editor .public-DraftStyleDefault-pre {
+	background-color: rgba(0, 0, 0, 0.05);
+	font-family: 'Inconsolata', 'Menlo', 'Consolas', monospace;
+	font-size: 16px;
+	padding: 20px;
+}
+
+.RichEditor-controls {
+	font-family: 'Helvetica', sans-serif;
+	font-size: 14px;
+	margin-bottom: 5px;
+	user-select: none;
+}
+
+.RichEditor-styleButton {
+	color: #999;
+	cursor: pointer;
+	margin-right: 16px;
+	padding: 2px 0;
+	display: inline-block;
+}
+
+.RichEditor-activeButton {
+	color: #5890ff;
+}

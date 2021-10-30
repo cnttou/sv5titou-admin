@@ -1,0 +1,6 @@
+.content {
+	padding-top: 10px;
+	display: flex;
+	justify-content: center;
+	min-height: calc(100vh - 121px);
+}

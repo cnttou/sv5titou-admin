@@ -1,0 +1,42 @@
+.header {
+	display: flex;
+	position: sticky;
+	top: 0;
+	width: 100%;
+	z-index: 20;
+}
+.wrapperLogo {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+.logo {
+	margin-right: 10px;
+}
+.btnLogout {
+	float: right;
+}
+.menu {
+	width: 100%;
+}
+.itemText {
+	margin-left: 10px;
+	display: inline-block;
+}
+@media only screen and (max-width: 600px) {
+	.header {
+		margin: 0;
+		padding: 0 !important;
+	}
+	.itemText {
+		display: none !important;
+	}
+	.menu {
+		justify-content: space-around;
+	}
+}
+@media only screen and (max-width: 870px) {
+    .header{
+        padding: 0;
+    }
+}

@@ -1,0 +1,29 @@
+.content {
+	display: flex;
+	min-height: calc(100vh - 121px);
+	justify-content: center;
+	align-items: center;
+}
+.card {
+	margin-top: 10px;
+	width: 590px;
+}
+.selectInput {
+	width: 100%;
+	flex: 1;
+}
+.labelClassName {
+	line-height: 36px;
+	margin-bottom: 0;
+}
+.wrapperInputClass {
+	align-items: center;
+}
+@media only screen and (max-width: 600px) {
+	.card {
+		width: 100%;
+	}
+	.content {
+		align-items: flex-start;
+	}
+}
