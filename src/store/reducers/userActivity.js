@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import {
+    addUserDetailAction,
 	cancelConfirmProofAction,
 	confirmProofAction,
 	fetchUserActivityAction,
@@ -15,6 +16,12 @@ export const userActivity = createSlice({
 	},
 	extraReducers: (builder) => {
 		builder
+			.addCase(addUserDetailAction, (state, action)=>{
+                const { uid, ...data } = action.payload;
+				state.value = state.value.map((c) => 
+					(c.userId === uid) ? {...c, ...data} :  c
+				);
+            })
 			.addCase(getImageProofAction.fulfilled, (state, action) => {
 				const { uid, acId, images } = action.payload;
 				state.value = state.value.map((c) => {

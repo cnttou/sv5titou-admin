@@ -1,17 +1,28 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Loading from '../components/Loading';
 import {
+	addUserDetailAction,
 	cancelConfirmProofAction,
 	confirmProofAction,
 	fetchUserActivityAction,
 } from '../store/actions';
-import { Table, Layout, Button } from 'antd';
+import { Table, Layout, Button, Switch, Select, Tag, Space } from 'antd';
 import styles from '../styles/Admin.module.css';
 import useModelOnlyShowActivity from '../hooks/useModelOnlyShowActivity';
 import InputSelectWithAddItem from '../components/InputSelectWithAddItem';
-import 'antd/lib/dropdown/style/index.css';
-import { nameTarget } from '../config';
+import {
+	fieldPesonal,
+	nameDepartmentActivity,
+	nameLevelActivity,
+	nameLevelRegister,
+	nameMajors,
+	nameSex,
+	nameTarget,
+} from '../config';
+import TableCustom from '../components/TableCustom';
+import useModelUser from '../hooks/useModelUser';
+import { CSVLink } from 'react-csv';
 
 const { Content } = Layout;
 
@@ -39,17 +50,43 @@ let option = [
 	},
 ];
 
+const options = [
+	{ value: 'hoc-tap', label: 'Học tập', color: '#ff9c6e' },
+	{ value: 'tinh-nguyen', label: 'Tình nguyện', color: '#ffc53d' },
+	{ value: 'the-luc', label: 'Thể lực', color: '#bae637' },
+	{ value: 'dao-duc', label: 'Đạo đức', color: '#f759ab' },
+	{ value: 'hoi-nhap', label: 'Hội nhập', color: '#40a9ff' },
+];
+const colorOption = {
+	'hoc-tap': '#ff9c6e',
+	'tinh-nguyen': '#ffc53d',
+	'the-luc': '#bae637',
+	'dao-duc': '#f759ab',
+	'hoi-nhap': '#40a9ff',
+};
+const headerCsv = Object.entries(fieldPesonal).map(([k, v]) => ({
+	label: v.label,
+	key: k,
+}));
 export default function AdminManageUser() {
 	const dispatch = useDispatch();
+	const [csvData, setCsvData] = useState([]);
 	let listUser = useSelector((state) => state.userActivity.value);
 	let { ui, setVisible, setDataModel } = useModelOnlyShowActivity({
 		title: 'Chi tiết hoạt động.',
 	});
-
+	let {
+		ui: uiUserDetail,
+		setVisible: setVisibleUserModel,
+		setDataModel: setDataModelUser,
+	} = useModelUser({
+		title: 'Chi tiết người dùng',
+	});
 	useEffect(async () => {
-		dispatch(fetchUserActivityAction()).catch((error) =>
-			console.log(error.message)
-		);
+		if (listUser.length === 0)
+			dispatch(fetchUserActivityAction()).catch((error) =>
+				console.log(error.message)
+			);
 	}, []);
 
 	const handleConfirm = (uid, acId, confirm) => {
@@ -58,32 +95,45 @@ export default function AdminManageUser() {
 		if (isConfirm) dispatch(confirmProofAction({ uid, acId }));
 		else dispatch(cancelConfirmProofAction({ uid, acId, confirm }));
 	};
-
 	const handleClickNameActivity = (item, uid) => {
 		setDataModel({ ...item, uid });
 		setVisible(true);
 	};
-
+	const handleShowUserDetail = (item) => {
+		console.log(item);
+		setDataModelUser(item);
+		setVisibleUserModel(true);
+	};
+	const handleChangeTargetSuccess = (value, item) => {
+		dispatch(
+			addUserDetailAction({
+				uid: item.userId,
+				data: { targetSuccess: value },
+			})
+		).then((res) => {
+			console.log('them thanh cong');
+		});
+	};
 	const expandedRowRender = (activity) => {
 		const columns = [
-			// {
-			// 	title: 'Trạng thái',
-			// 	dataIndex: 'active',
-			// 	key: 'active',
-			// 	// filters: [
-			// 	// 	{
-			// 	// 		text: 'Chưa kích hoạt',
-			// 	// 		value: 'false',
-			// 	// 	},
-			// 	// 	{
-			// 	// 		text: 'Đã kích hoạt',
-			// 	// 		value: 'true',
-			// 	// 	},
-			// 	// ],
-			// 	// defaultFilteredValue: ['true'],
-			// 	// onFilter: (value, record) => record.active.toString() === value,
-			// 	render: (text) => <Switch checked={text} size="small" />,
-			// },
+			{
+				title: 'Trạng thái',
+				dataIndex: 'active',
+				key: 'active',
+				filters: [
+					{
+						text: 'Chưa kích hoạt',
+						value: 'false',
+					},
+					{
+						text: 'Đã kích hoạt',
+						value: 'true',
+					},
+				],
+				defaultFilteredValue: ['true'],
+				onFilter: (value, record) => record.active.toString() === value,
+				render: (text) => <Switch checked={text} size="small" />,
+			},
 			{
 				title: 'Tên hoạt động',
 				key: 'name',
@@ -99,6 +149,12 @@ export default function AdminManageUser() {
 						</Button>
 					);
 				},
+			},
+			{
+				title: 'Cấp hoạt động',
+				dataIndex: 'level',
+				key: 'level',
+				render: (text) => nameLevelActivity[text],
 			},
 			{
 				title: 'Tiêu chí',
@@ -122,14 +178,18 @@ export default function AdminManageUser() {
 						text: 'MC không hợp lệ',
 						value: 'cancel',
 					},
+					{
+						text: 'Chưa thêm minh chứng',
+						value: 'notproof',
+					},
 				],
 				onFilter: (value, record) => {
-					if (
-						record.confirm.toString().length > 5 &&
-						value === 'cancel'
-					)
-						return true;
-					else return record.confirm.toString() === value;
+					if (value === 'notproof') return record.proof === 0;
+					else if (value === 'cancel')
+						return record.confirm.toString().length > 5;
+					else if (value === 'false')
+						return !record.confirm && record.proof !== 0;
+					else if (value === 'true') return record.confirm === true;
 				},
 				defaultFilteredValue: ['false', 'cancel'],
 				render: (item) => {
@@ -161,7 +221,38 @@ export default function AdminManageUser() {
 			/>
 		);
 	};
+	const tagRender = (props) => {
+		const { label, value, closable, onClose } = props;
+		const onPreventMouseDown = (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+		};
 
+		return (
+			<Tag
+				color={colorOption[value]}
+				onMouseDown={onPreventMouseDown}
+				closable={closable}
+				onClose={onClose}
+				style={{ marginRight: 3 }}
+			>
+				{label}
+			</Tag>
+		);
+	};
+	const handleSelectRowTabel = (record, selected, selectedRows, e) => {
+		console.log(selectedRows);
+		setCsvData(
+			selectedRows.map((c) => ({
+				...c,
+				sex: nameSex[c.sex],
+				targetSuccess: c.targetSuccess.map((c) => nameTarget[c]).join("-"),
+				majors: nameMajors[c.majors],
+				department: nameDepartmentActivity[c.department],
+				levelReview: nameLevelRegister[c.levelReview],
+			}))
+		);
+	};
 	const columns = [
 		{
 			title: 'Tên',
@@ -189,38 +280,80 @@ export default function AdminManageUser() {
 				)
 					return true;
 				else if (value === 'notConfirm')
-					return record.listData.filter((c) => c.confirm === 'false')
+					return record.listData.filter((c) => c.confirm === false)
 						.length;
 
 				return false;
 			},
-			defaultFilteredValue: ['notConfirm'],
-			render: (item) => (
-				<p>
-					{item.fullName ||
-						item.email.slice(10, item.email.indexOf('@'))}
-				</p>
+			// searchFilter: true,
+			// defaultFilteredValue: ['notConfirm'],
+			render: (item, record) => (
+				<Button
+					type="link"
+					onClick={() => handleShowUserDetail(record)}
+				>
+					{item.fullName}
+				</Button>
 			),
 		},
 		{
 			title: 'Mssv',
 			key: 'mssv',
-			render: (item) => <p>{item.email.slice(0, 10)}</p>,
+			// searchFilter: true,
+			render: (item) => <p>{item.studentCode}</p>,
+		},
+		{
+			title: 'Xét SV5T cấp',
+			key: 'levelReview',
+			filters: Object.entries(nameLevelRegister).map((c) => ({
+				text: c[1],
+				value: c[0],
+			})),
+			onFilter: (value, record) => record.levelReview === value,
+			render: (item) => nameLevelRegister[item.levelReview],
 		},
 		{
 			title: 'Lớp',
 			key: 'classUser',
 			render: (item) => <p>{item.classUser || 'Sv chưa điền'}</p>,
 		},
+		{
+			title: 'Đã hoàn thành',
+			key: 'action',
+			filters: options.map((c) => ({
+				value: c.value,
+				text: c.label,
+			})),
+			onFilter: (value, record) =>
+				record.targetSuccess.includes(value) || false,
+			render: (text, record) => (
+				<Select
+					maxTagCount="responsive"
+					mode="tags"
+					placeholder="Tiêu chí đã hoàn thành"
+					tagRender={tagRender}
+					defaultValue={record.targetSuccess}
+					style={{ width: 200 }}
+					options={options}
+					onChange={(value) =>
+						handleChangeTargetSuccess(value, record)
+					}
+				/>
+			),
+		},
 	];
 
 	const loadTable = (listUser = []) => (
-		<Table
+		<TableCustom
 			pagination={false}
 			columns={columns}
 			expandable={{
 				rowExpandable: (record) => record.listData.length !== 0,
 				expandedRowRender,
+			}}
+			rowSelection={{
+				onSelect: handleSelectRowTabel,
+				onSelectAll: handleSelectRowTabel,
 			}}
 			dataSource={listUser}
 			size="small"
@@ -228,12 +361,23 @@ export default function AdminManageUser() {
 	);
 	return (
 		<Content className={styles.contentAdminManageUser}>
+			<Space direction="horizontal">
+				<CSVLink
+					filename={'data.csv'}
+					data={csvData}
+					target="_blank"
+					headers={headerCsv}
+				>
+					Xuất dữ liệu đã chọn
+				</CSVLink>
+			</Space>
 			{listUser?.length ? (
 				loadTable(listUser.map((c, key) => ({ ...c, key })))
 			) : (
 				<Loading />
 			)}
 			{ui()}
+			{uiUserDetail()}
 		</Content>
 	);
 }

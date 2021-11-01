@@ -11,8 +11,7 @@ import { compareStringDate, compareStringName } from '../utils/compareFunction';
 import useCreateEditActivityModel from '../hooks/useCreateEditActivityModel';
 import styles from '../styles/Admin.module.css';
 import TableCustom from '../components/TableCustom';
-import 'antd/lib/dropdown/style/index.css';
-import { nameTarget } from '../config';
+import { nameTarget, nameDepartmentActivity, nameLevelActivity } from '../config';
 
 const { Content } = Layout;
 
@@ -90,47 +89,52 @@ export default function AdminManageNews() {
 			render: (text, record, index) => (
 				<Switch
 					checked={text}
-					onChange={(value)=>handleSwitchActive(value, record, index)}
+					onChange={(value) =>
+						handleSwitchActive(value, record, index)
+					}
 					size="small"
 				/>
 			),
 		},
 		{
-			title: 'Tên',
+			title: 'Khoa',
+			dataIndex: 'department',
+			key: 'department',
+			filters: Object.entries(nameDepartmentActivity).map((c) => ({
+				value: c[0],
+				text: c[1],
+			})),
+			onFilter: (value, record) => record.department === value,
+			render: (text) => nameDepartmentActivity[text],
+		},
+		{
+			title: 'Tên chương trình',
 			dataIndex: 'name',
 			key: 'name',
 			searchFilter: true,
 			sorter: (a, b) => compareStringName(a.name, b.name),
-			render: (text) => <a>{text}</a>,
 		},
 		{
 			title: 'Tiêu chí',
 			dataIndex: 'target',
 			key: 'target',
-			filters: [
-				{
-					text: 'Hội nhập tốt',
-					value: 'hoi-nhap',
-				},
-				{
-					text: 'Đạo đức tốt',
-					value: 'dao-duc',
-				},
-				{
-					text: 'Học tập tốt',
-					value: 'hoc-tap',
-				},
-				{
-					text: 'Tình nguyện tốt',
-					value: 'tinh-nguyen',
-				},
-				{
-					text: 'Thể lực tốt',
-					value: 'suc-khoe',
-				},
-			],
+			filters: Object.entries(nameTarget).map((c) => ({
+				value: c[0],
+				text: c[1],
+			})),
 			onFilter: (value, record) => record.target === value,
 			render: (text) => nameTarget[text],
+		},
+		{
+			title: 'Cấp hoạt động',
+			dataIndex: 'level',
+			key: 'level',
+			filters: Object.entries(nameLevelActivity).map((c) => ({
+				value: c[0],
+				text: c[1],
+			})),
+			onFilter: (value, record) => record.level === value,
+			render: (text) => nameLevelActivity[text],
 		},
 		{
 			title: 'Thời gian',

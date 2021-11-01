@@ -25,26 +25,21 @@ export const removeUrlImageApi = (fileName, acId = '') => {
 			images: firebase.firestore.FieldValue.arrayRemove(fileName),
 		});
 };
-export const getRegisterActivityApi = (userId) => {
-	let uId = userId || currentUser().uid;
+const getActivityByListId = (listId) => {
 	return db
-		.collection('register_activity')
-		.doc(uId)
-		.collection('activities')
-		.where('active', '==', true)
+		.collection('news')
+		.where(firebase.firestore.FieldPath.documentId(), 'in', listId)
 		.get()
 		.then((querySnapshot) => {
-			let data = [];
+			let listData = [];
 			querySnapshot.forEach(async (doc) => {
-				data.push({
+				listData.push({
 					...doc.data(),
 					id: doc.id,
-					activityRef: doc.data()?.activityRef?.path || '',
 				});
 			});
-			return data;
-		})
-		.catch((error) => console.log(error.message));
+			return listData;
+		});
 };
 export const getAllRegisterActivityApi = (userId) => {
 	let uId = userId || currentUser().uid;
@@ -54,16 +49,25 @@ export const getAllRegisterActivityApi = (userId) => {
 		.doc(uId)
 		.collection('activities')
 		.get()
-		.then((querySnapshot) => {
-			let data = [];
-			querySnapshot.forEach(async (doc) => {
-				data.push({
+		.then(async (querySnapshot) => {
+			let dataUser = [];
+			querySnapshot.forEach((doc) => {
+				dataUser.push({
 					...doc.data(),
 					id: doc.id,
-					activityRef: doc.data()?.activityRef?.path || '',
 				});
 			});
-			return data;
+
+			if (dataUser.length === 0) return dataUser;
+
+			let activities = await getActivityByListId(
+				dataUser.map((c) => c.id)
+			);
+
+			return activities.map((c) => ({
+				...dataUser.find((d) => d.id === c.id),
+				...c,
+			}));
 		})
 		.catch((error) => console.log(error.message));
 };
@@ -166,7 +170,7 @@ export const addDataApi = (collection = 'news', data, docId) => {
 			.then(() => ({ ...data, id: docId }));
 	}
 };
-export const addUserDetailApi = (data) => {
+export const addUserDetailApi = (uid, data) => {
 	console.log('data add :', {
 		email: currentUser().email,
 		userId: currentUser().uid,
@@ -174,16 +178,9 @@ export const addUserDetailApi = (data) => {
 	});
 	return db
 		.collection('register_activity')
-		.doc(currentUser().uid)
-		.set(
-			{
-				email: currentUser().email,
-				userId: currentUser().uid,
-				...data,
-			},
-			{ merge: true }
-		)
-		.then(() => ({ ...data }))
+		.doc(uid)
+		.set(data, { merge: true })
+		.then(() => ({ ...data, uid }))
 		.catch((err) => console.log(err.message));
 };
 export const getUserDetailApi = () => {

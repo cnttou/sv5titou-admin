@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import {
 	Modal,
 	Form,
@@ -7,10 +7,10 @@ import {
 	Button,
 	Select,
 	InputNumber,
-	DatePicker,
 	message,
 	Switch,
 } from 'antd';
+import DatePicker from '../components/DatePicker';
 import { useEffect } from 'react';
 import InputRichText from '../components/InputRichText';
 import { useDispatch } from 'react-redux';
@@ -66,7 +66,7 @@ function useCreateEditActivityModel({ title, action }) {
 
 	useEffect(() => {
 		let date = null;
-		if (dataModel.date) date = moment(dataModel.date, 'DD-MM-YYYY');
+		if (dataModel.date) date = dayjs(dataModel.date, 'DD-MM-YYYY');
 
 		form.setFieldsValue({ ...dataModel, date });
 		setActive(dataModel.active);
@@ -74,7 +74,7 @@ function useCreateEditActivityModel({ title, action }) {
 
 	const onFinish = () => {
 		const data = Object.assign(form.getFieldsValue());
-		let date = moment(form.getFieldsValue().date).format('DD-MM-YYYY');
+		let date = dayjs(form.getFieldsValue().date).format('DD-MM-YYYY');
 		data.date = date;
 		let docId = dataModel.id || null;
 		console.log(data);
@@ -171,7 +171,7 @@ function useCreateEditActivityModel({ title, action }) {
 						style={{ width: '100%' }}
 						onChange={(value, dateStr) => {
 							form.setFieldsValue({
-								date: moment(dateStr, 'DD-MM-YYYY'),
+								date: dayjs(dateStr, 'DD-MM-YYYY'),
 							});
 						}}
 					/>

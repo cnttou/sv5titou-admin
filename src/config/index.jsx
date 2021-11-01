@@ -3,7 +3,41 @@ export const nameLevelActivity = {
 	khoa: 'Cấp khoa',
 	truong: 'Cấp trường',
 };
+export const nameLevelRegister = {
+	'xet-cap-khoa': 'Xét cấp khoa',
+	'xet-cap-truong': 'Xét cấp trường',
+};
+export const nameSex = {
+	male: 'Nam',
+	female: 'Nữ',
+};
 
+export const fieldPesonal = {
+	classUser: { label: 'Lớp' },
+	majors: { label: 'Chuyên ngành', parse: (value) => nameMajors[value] },
+	fullName: { label: 'Họ và tên' },
+	birthday: { label: 'Ngày sinh' },
+	sex: { label: 'Giới tính', parse: (value) => nameSex[value] },
+	studentCode: { label: 'Mssv' },
+	department: {
+		label: 'Khoa',
+		parse: (value) => nameDepartmentActivity[value],
+	},
+	phoneNumber: { label: 'Số điện thoại' },
+	email: { label: 'Email' },
+	idCard: { label: 'Số CMND' },
+	bankNumber: { label: 'Số tài khoản' },
+	levelReview: {
+		label: 'Cấp xét SV5T',
+		parse: (value) => nameLevelRegister[value],
+	},
+	pointTraining: { label: 'Điểm rèn luyện' },
+	gpa: { label: 'Điềm trung bình' },
+	targetSuccess: {
+		label: 'Tiêu chí đã đạt',
+		parse: (value) => nameTarget[value],
+	},
+};
 export const nameDepartmentActivity = {
 	cntt: 'Công Nghệ Thông Tin',
 	cnsh: 'Công Nghệ Sinh Học',
@@ -22,7 +56,7 @@ export const nameTarget = {
 	'hoc-tap': 'Học tập tốt',
 	'dao-duc': 'Đạo đức tốt',
 	'tinh-nguyen': 'Tình nguyện tốt',
-	'suc-khoe': 'Thể lực tốt',
+	'the-luc': 'Thể lực tốt',
 };
 export const nameMajors = {
 	7220201: 'Ngôn ngữ Anh',

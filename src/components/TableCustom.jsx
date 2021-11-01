@@ -1,8 +1,9 @@
 import React from 'react';
-import { Table, Input, Button, Space, DatePicker } from 'antd';
+import { Table, Input, Button, Space } from 'antd';
+import DatePicker from '../components/DatePicker'
 import Highlighter from 'react-highlight-words';
 import { FilterOutlined, SearchOutlined } from '@ant-design/icons';
-import moment from 'moment';
+import dayjs from 'dayjs'
 
 class TableCustom extends React.Component {
 	state = {
@@ -153,10 +154,10 @@ class TableCustom extends React.Component {
 			/>
 		),
 		onFilter: (value, record) => {
-			var compareDate = moment(record[dataIndex], 'DD-MM-YYYY');
-			var startDate = moment(this.state.dateFilter[0], 'DD-MM-YYYY');
-			var endDate = moment(this.state.dateFilter[1], 'DD-MM-YYYY');
-			return compareDate.isBetween(startDate, endDate);
+			var compareDate = dayjs(record[dataIndex], 'DD-MM-YYYY');
+			var startDate = dayjs(this.state.dateFilter[0], 'DD-MM-YYYY');
+			var endDate = dayjs(this.state.dateFilter[1], 'DD-MM-YYYY');
+			return compareDate.isAfter(startDate) && compareDate.isBefore(endDate);
 		},
 		onFilterDropdownVisibleChange: (visible) => {
 			if (visible) {

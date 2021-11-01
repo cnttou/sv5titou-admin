@@ -8,7 +8,6 @@ import {
 	getActivitiesApi,
 	deleteDataApi,
 	addDataApi,
-	getRegisterActivityApi,
 	registerActivityApi,
 	removeRegisterActivityApi,
     getAllActivitiesApi,
@@ -42,14 +41,6 @@ export const deleteActivityAction = createAsyncThunk(
 	'news/deleteNews',
 	async (docId) => {
 		let response = await deleteDataApi('news', docId);
-		return response;
-	}
-);
-
-export const fetchRegisteredActivityAction = createAsyncThunk(
-	'registerActivity/fetchRegisterActivity',
-	async () => {
-		let response = await getRegisterActivityApi();
 		return response;
 	}
 );

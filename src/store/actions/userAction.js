@@ -14,8 +14,8 @@ export const logoutAction = createAction('LOGOUT');
 
 export const addUserDetailAction = createAsyncThunk(
 	'user/addUserDetail',
-	async (data) => {
-		let response = await addUserDetailApi(data);
+	async ({uid, data}) => {
+		let response = await addUserDetailApi(uid, data);
 		return response;
 	}
 );

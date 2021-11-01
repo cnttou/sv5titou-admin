@@ -9,7 +9,6 @@ import { lazy } from 'react';
 const ReactQuill = lazy(() => import('react-quill'));
 import styles from '../styles/ActivityFeed.module.css';
 import Loading from './Loading';
-import 'antd/lib/tooltip/style/index.css'
 import { nameLevelActivity, nameTarget } from '../config';
 
 const { Text, Title } = Typography;
