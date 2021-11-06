@@ -11,7 +11,11 @@ import { compareStringDate, compareStringName } from '../utils/compareFunction';
 import useCreateEditActivityModel from '../hooks/useCreateEditActivityModel';
 import styles from '../styles/Admin.module.css';
 import TableCustom from '../components/TableCustom';
-import { nameTarget, nameDepartmentActivity, nameLevelActivity } from '../config';
+import {
+	nameTarget,
+	nameDepartmentActivity,
+	nameLevelActivity,
+} from '../config';
 
 const { Content } = Layout;
 
@@ -60,8 +64,13 @@ export default function AdminManageNews() {
 		});
 
 	const handleSwitchActive = (value, data, index) => {
-        // console.log('log ', value, data, index);
-		dispatch(addActivityAction({ data: {...data, active: value}, docId: data.id }))
+		// console.log('log ', value, data, index);
+		dispatch(
+			addActivityAction({
+				data: { ...data, active: value },
+				docId: data.id,
+			})
+		)
 			.then(() => {
 				setVisible(false);
 			})
@@ -185,7 +194,7 @@ export default function AdminManageNews() {
 	return (
 		<Content className={styles.content}>
 			{listNews?.length ? loadTable() : <Loading />}
-			{visible === true ? ui() : null}
+			{ui()}
 		</Content>
 	);
 }

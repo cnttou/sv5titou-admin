@@ -11,6 +11,7 @@ import HeaderUser from './components/HeaderUser';
 import { lazy } from 'react';
 const FooterContent = lazy(() => import('./components/FooterContent'));
 import './App.css';
+import 'antd/dist/antd.css';
 import PrivateRoute from './routes/PrivateRoute';
 
 function App() {

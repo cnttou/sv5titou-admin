@@ -20,14 +20,14 @@ export default defineConfig({
 		// 	],
 		// }),
 	],
-	// css: {
-	// 	preprocessorOptions: {
-	// 		less: {
-	// 			javascriptEnabled: true,
-	// 		},
-	// 	},
-	// },
-	// build: {
-	// 	minify: 'esbuild',
-	// },
+	css: {
+		preprocessorOptions: {
+			less: {
+				javascriptEnabled: true,
+			},
+		},
+	},
+	build: {
+		minify: 'esbuild',
+	},
 });
