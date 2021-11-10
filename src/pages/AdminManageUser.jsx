@@ -246,7 +246,9 @@ export default function AdminManageUser() {
 			selectedRows.map((c) => ({
 				...c,
 				sex: nameSex[c.sex],
-				targetSuccess: c.targetSuccess.map((c) => nameTarget[c]).join("-"),
+				targetSuccess: c.targetSuccess
+					? c.targetSuccess.map((c) => nameTarget[c]).join('-')
+					: '',
 				majors: nameMajors[c.majors],
 				department: nameDepartmentActivity[c.department],
 				levelReview: nameLevelRegister[c.levelReview],
@@ -324,8 +326,11 @@ export default function AdminManageUser() {
 				value: c.value,
 				text: c.label,
 			})),
-			onFilter: (value, record) =>
-				record.targetSuccess.includes(value) || false,
+			onFilter: (value, record) => {
+				if (record.targetSuccess)
+					return record.targetSuccess.includes(value) || false;
+				else return false;
+			},
 			render: (text, record) => (
 				<Select
 					maxTagCount="responsive"

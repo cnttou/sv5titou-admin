@@ -6,7 +6,7 @@ import {
 	fetchAllActivityAction,
 } from '../store/actions';
 import Loading from '../components/Loading';
-import { Space, Button, Layout, Switch } from 'antd';
+import { Space, Button, Layout, Switch, Modal } from 'antd';
 import { compareStringDate, compareStringName } from '../utils/compareFunction';
 import useCreateEditActivityModel from '../hooks/useCreateEditActivityModel';
 import styles from '../styles/Admin.module.css';
@@ -16,8 +16,10 @@ import {
 	nameDepartmentActivity,
 	nameLevelActivity,
 } from '../config';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 
 const { Content } = Layout;
+const { confirm } = Modal;
 
 const initActivity = {
 	active: true,
@@ -55,7 +57,15 @@ export default function AdminManageNews() {
 
 	const handleDelete = (item) => {
 		console.log('clicked delete activity', item);
-		dispatch(deleteActivityAction(item.id));
+		confirm({
+			title: 'Bạn có chắc muốn xóa hoạt động?',
+			icon: <ExclamationCircleOutlined />,
+			content: item.name,
+			onOk() {
+				return dispatch(deleteActivityAction(item.id));
+			},
+			onCancel() {},
+		});
 	};
 
 	const { ui, visible, setVisible, setDataModel } =
