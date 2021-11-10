@@ -15,7 +15,11 @@ import { useEffect } from 'react';
 import InputRichText from '../components/InputRichText';
 import { useDispatch } from 'react-redux';
 import { addActivityAction } from '../store/actions';
-import { nameDepartmentActivity, nameLevelActivity, nameTarget } from '../config';
+import {
+	nameDepartmentActivity,
+	nameLevelActivity,
+	nameTarget,
+} from '../config';
 
 const { Option } = Select;
 
@@ -36,7 +40,7 @@ const initActivity = {
 	location: '',
 	summary: '',
 	numPeople: null,
-	target: null,
+	target: [],
 };
 
 export const optionLevel = Object.entries(nameLevelActivity).map((c) => (
@@ -49,11 +53,13 @@ export const optionTarget = Object.entries(nameTarget).map((c, index) => (
 	</Option>
 ));
 
-export const optionDepartment = Object.entries(nameDepartmentActivity).map((c, index) => (
-	<Option key={index} value={c[0]}>
-		{c[1]}
-	</Option>
-));
+export const optionDepartment = Object.entries(nameDepartmentActivity).map(
+	(c, index) => (
+		<Option key={index} value={c[0]}>
+			{c[1]}
+		</Option>
+	)
+);
 
 function useCreateEditActivityModel({ title, action }) {
 	const [visible, setVisible] = useState(false);
@@ -76,6 +82,7 @@ function useCreateEditActivityModel({ title, action }) {
 		const data = Object.assign(form.getFieldsValue());
 		let date = dayjs(form.getFieldsValue().date).format('DD-MM-YYYY');
 		data.date = date;
+		data.typeActivity = 'register';
 		let docId = dataModel.id || null;
 		console.log(data);
 
@@ -118,25 +125,14 @@ function useCreateEditActivityModel({ title, action }) {
 					label="Khoa"
 					rules={[{ required: true }]}
 				>
-					<Select
-						placeholder="Chọn khoa"
-						// onChange={(value) =>
-						// 	form.setFieldsValue({ department: value })
-						// }
-						allowClear
-					>
-						{optionDepartment}
-					</Select>
+					<Select placeholder="Chọn khoa">{optionDepartment}</Select>
 				</Form.Item>
 				<Form.Item
 					name="level"
 					label="Hoạt động cấp"
 					rules={[{ required: true }]}
 				>
-					<Select
-						placeholder="Cấp của hoạt động"
-						// style={{ width: '100%' }}
-					>
+					<Select placeholder="Cấp của hoạt động">
 						{optionLevel}
 					</Select>
 				</Form.Item>
@@ -154,9 +150,7 @@ function useCreateEditActivityModel({ title, action }) {
 				>
 					<Select
 						placeholder="Nhập tiêu chí xét SV5T"
-						// onChange={(value) =>
-						// 	form.setFieldsValue({ target: value })
-						// }
+						mode="multiple"
 					>
 						{optionTarget}
 					</Select>

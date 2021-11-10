@@ -7,7 +7,7 @@ import {
 	confirmProofAction,
 	fetchUserActivityAction,
 } from '../store/actions';
-import { Table, Layout, Button, Switch, Select, Tag, Space } from 'antd';
+import { Table, Layout, Button, Switch, Select, Tag, Space, Modal } from 'antd';
 import styles from '../styles/Admin.module.css';
 import useModelOnlyShowActivity from '../hooks/useModelOnlyShowActivity';
 import InputSelectWithAddItem from '../components/InputSelectWithAddItem';
@@ -25,6 +25,7 @@ import useModelUser from '../hooks/useModelUser';
 import { CSVLink } from 'react-csv';
 
 const { Content } = Layout;
+const { confirm } = Modal;
 
 let option = [
 	{
@@ -93,7 +94,10 @@ export default function AdminManageUser() {
 		let isConfirm = confirm === 'true';
 		console.log('handle confirm: ', { uid, acId, confirm });
 		if (isConfirm) dispatch(confirmProofAction({ uid, acId }));
-		else dispatch(cancelConfirmProofAction({ uid, acId, confirm }));
+		else
+			dispatch(
+				cancelConfirmProofAction({ uid, acId, confirm: isConfirm })
+			);
 	};
 	const handleClickNameActivity = (item, uid) => {
 		setDataModel({ ...item, uid });
@@ -159,7 +163,8 @@ export default function AdminManageUser() {
 			{
 				title: 'Tiêu chí',
 				key: 'target',
-				render: (item) => nameTarget[item.target],
+				render: (item) =>
+					item.target.map((c) => nameTarget[c]).join(', '),
 			},
 			{ title: 'Ngày diễn ra', dataIndex: 'date', key: 'date' },
 			{
@@ -188,7 +193,7 @@ export default function AdminManageUser() {
 					else if (value === 'cancel')
 						return record.confirm.toString().length > 5;
 					else if (value === 'false')
-						return !record.confirm && record.proof !== 0;
+						return record.confirm === false && record.proof !== 0;
 					else if (value === 'true') return record.confirm === true;
 				},
 				defaultFilteredValue: ['false', 'cancel'],
@@ -198,7 +203,12 @@ export default function AdminManageUser() {
 							defaultValue={item.confirm.toString()}
 							value={option}
 							setValue={(key) =>
-								handleConfirm(activity.userId, item.id, key)
+								handleConfirm(
+									activity.userId,
+									item.id,
+									key,
+									item.proof
+								)
 							}
 							style={{
 								width: '100%',

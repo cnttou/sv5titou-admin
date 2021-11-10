@@ -30,7 +30,7 @@ const initActivity = {
 	location: '',
 	summary: '',
 	numPeople: null,
-	target: null,
+	target: [],
 };
 
 export default function AdminManageNews() {
@@ -45,7 +45,6 @@ export default function AdminManageNews() {
 	}, []);
 
 	const handleShowModelToEdit = (item) => {
-		console.log(item);
 		setDataModel(item);
 		setVisible(true);
 	};
@@ -141,8 +140,8 @@ export default function AdminManageNews() {
 				value: c[0],
 				text: c[1],
 			})),
-			onFilter: (value, record) => record.target === value,
-			render: (text) => nameTarget[text],
+			onFilter: (value, record) => record.target.includes(value),
+			render: (text) => text.map((c) => nameTarget[c]).join(', '),
 		},
 		{
 			title: 'Cấp hoạt động',

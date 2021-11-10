@@ -119,6 +119,7 @@ export const getDetailActivityApi = (docId = '') => {
 export const getAllActivitiesApi = (limit = 25) => {
 	return db
 		.collection('news')
+		.where('typeActivity', '==', 'register')
 		.limit(limit)
 		.get()
 		.then((querySnapshot) => {
