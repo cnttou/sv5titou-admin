@@ -7,42 +7,34 @@ import {
 } from '../store/actions';
 import Loading from '../components/Loading';
 import { Space, Button, Layout, Switch, Modal } from 'antd';
-import { compareStringDate, compareStringName } from '../utils/compareFunction';
-import useCreateEditActivityModel from '../hooks/useCreateEditActivityModel';
+import { compareStringName } from '../utils/compareFunction';
 import styles from '../styles/Admin.module.css';
 import TableCustom from '../components/TableCustom';
-import {
-	nameTarget,
-	nameDepartmentActivity,
-	nameLevelActivity,
-} from '../config';
+import { nameLevelActivity, nameTarget, nameTypeActivity } from '../config';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
+import useCreateEditOtherActivityModel from '../hooks/useCreateEditOtherActivityModel';
 
 const { Content } = Layout;
 const { confirm } = Modal;
 
 const initActivity = {
 	active: true,
-	department: null,
-	level: null,
 	name: '',
-	date: null,
-	location: '',
+	typeActivity: null,
 	summary: '',
-	numPeople: null,
 	target: [],
 };
 
-export default function AdminManageNews() {
+export default function AdminManageOtherActivity() {
 	const listNews = useSelector((state) =>
-		state.activity.value.filter((c) => c.typeActivity==='register')
+		state.activity.value.filter((c) => c.typeActivity !== 'register')
 	);
 
 	const dispatch = useDispatch();
 
 	useEffect(() => {
 		if (listNews.length === 0) {
-			dispatch(fetchAllActivityAction());
+			dispatch(fetchAllActivityAction(50));
 		}
 	}, []);
 
@@ -69,8 +61,8 @@ export default function AdminManageNews() {
 		});
 	};
 
-	const { ui, visible, setVisible, setDataModel } =
-		useCreateEditActivityModel({
+	const { ui, setVisible, setDataModel } =
+		useCreateEditOtherActivityModel({
 			title: 'Tạo hoặc chỉnh sửa hoạt động',
 		});
 
@@ -117,15 +109,15 @@ export default function AdminManageNews() {
 			),
 		},
 		{
-			title: 'Khoa',
-			dataIndex: 'department',
-			key: 'department',
-			filters: Object.entries(nameDepartmentActivity).map((c) => ({
+			title: 'Loại tiêu chuẩn',
+			dataIndex: 'typeActivity',
+			key: 'typeActivity',
+			filters: Object.entries(nameTypeActivity).map((c) => ({
 				value: c[0],
 				text: c[1],
 			})),
-			onFilter: (value, record) => record.department === value,
-			render: (text) => nameDepartmentActivity[text],
+			onFilter: (value, record) => record.typeActivity.toString() === value,
+			render: (text) => nameTypeActivity[text],
 		},
 		{
 			title: 'Tên chương trình',
@@ -155,24 +147,6 @@ export default function AdminManageNews() {
 			})),
 			onFilter: (value, record) => record.level === value,
 			render: (text) => nameLevelActivity[text],
-		},
-		{
-			title: 'Thời gian',
-			dataIndex: 'date',
-			key: 'date',
-			dateBeweenFilter: true,
-			defaultSortOrder: 'descend',
-			sorter: (a, b) => compareStringDate(a, b),
-		},
-		{
-			title: 'Địa điểm',
-			dataIndex: 'location',
-			key: 'location',
-		},
-		{
-			title: 'Số người',
-			dataIndex: 'numPeople',
-			key: 'numPeople',
 		},
 		{
 			title: 'Thao tác',

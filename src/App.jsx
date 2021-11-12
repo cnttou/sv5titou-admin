@@ -8,8 +8,6 @@ import pages from './routes/Routes';
 import { Suspense } from 'react';
 import Loading from './components/Loading';
 import HeaderUser from './components/HeaderUser';
-import { lazy } from 'react';
-const FooterContent = lazy(() => import('./components/FooterContent'));
 import './App.css';
 import 'antd/dist/antd.css';
 import PrivateRoute from './routes/PrivateRoute';
@@ -37,7 +35,6 @@ function App() {
 						<Redirect from="/" to="/admin" exact />
 						{showPage(pages)}
 					</Switch>
-					<FooterContent />
 				</Suspense>
 			</Router>
 		</>

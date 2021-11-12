@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Menu, Layout, Image } from 'antd';
 import {
 	AppstoreAddOutlined,
+	AppstoreOutlined,
 	AuditOutlined,
 	LogoutOutlined,
 } from '@ant-design/icons';
@@ -28,31 +29,27 @@ export default function HeaderUser() {
 				className={styles.menu}
 				expandIcon={false}
 			>
-				<Menu.Item
-					key="manage-activity"
-					icon={
-						<Link to="/admin">
-							<AppstoreAddOutlined />
-						</Link>
-					}
-				>
+				<Menu.Item key="manage-activity" icon={<AppstoreOutlined />}>
 					<Link to="/admin" className={styles.itemText}>
 						Quản lý hoạt động
 					</Link>
 				</Menu.Item>
 				<Menu.Item
-					key="manage-proof"
-					icon={
-						<Link to="/admin-manage-user">
-							<AuditOutlined />
-						</Link>
-					}
+					key="manage-other-activity"
+					icon={<AppstoreAddOutlined />}
 				>
+					<Link
+						to="/admin-manage-other-activity"
+						className={styles.itemText}
+					>
+						Quản lý hoạt động khác
+					</Link>
+				</Menu.Item>
+				<Menu.Item key="manage-proof" icon={<AuditOutlined />}>
 					<Link to="/admin-manage-user" className={styles.itemText}>
 						Quản lý minh chứng
 					</Link>
 				</Menu.Item>
-
 				<Menu.Item
 					key="login"
 					className="btnLogout"
@@ -61,7 +58,7 @@ export default function HeaderUser() {
 							<LogoutOutlined />
 						</Link>
 					}
-                    onClick={()=>logoutApi()}
+					onClick={() => logoutApi()}
 				>
 					<Link to="/login" className={styles.itemText}>
 						{currentUser() ? 'Đăng xuất' : 'Đăng nhập'}

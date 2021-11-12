@@ -2,6 +2,8 @@ export const nameLevelActivity = {
 	lop: 'Cấp chi',
 	khoa: 'Cấp khoa',
 	truong: 'Cấp trường',
+	tp: 'Cấp thành phố',
+	qg: 'Cấp quốc gia',
 };
 export const nameLevelRegister = {
 	'xet-cap-khoa': 'Xét cấp khoa',
@@ -10,6 +12,11 @@ export const nameLevelRegister = {
 export const nameSex = {
 	male: 'Nam',
 	female: 'Nữ',
+};
+export const nameTypeActivity = {
+	register: 'Tiêu chuẩn đăng ký',
+	require: 'Tiêu chuẩn bắt buộc',
+	other: 'Tiêu chuẩn khác',
 };
 
 export const fieldPesonal = {

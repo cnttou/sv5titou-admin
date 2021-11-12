@@ -116,11 +116,9 @@ export const getDetailActivityApi = (docId = '') => {
 			return data;
 		});
 };
-export const getAllActivitiesApi = (limit = 25) => {
+export const getAllActivitiesApi = () => {
 	return db
 		.collection('news')
-		.where('typeActivity', '==', 'register')
-		.limit(limit)
 		.get()
 		.then((querySnapshot) => {
 			let data = [];

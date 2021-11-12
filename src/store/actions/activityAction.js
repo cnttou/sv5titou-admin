@@ -22,8 +22,8 @@ export const fetchActivityAction = createAsyncThunk(
 );
 export const fetchAllActivityAction = createAsyncThunk(
 	'news/fetchAllNews',
-	async (limit) => {
-		let respone = await getAllActivitiesApi(limit);
+	async () => {
+		let respone = await getAllActivitiesApi();
 		return respone;
 	}
 );
