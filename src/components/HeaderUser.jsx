@@ -47,7 +47,15 @@ export default function HeaderUser() {
 				</Menu.Item>
 				<Menu.Item key="manage-proof" icon={<AuditOutlined />}>
 					<Link to="/admin-manage-user" className={styles.itemText}>
-						Quản lý minh chứng
+						Quản lý minh chứng theo tên SV
+					</Link>
+				</Menu.Item>
+				<Menu.Item key="manage-proof-by-activity" icon={<AuditOutlined />}>
+					<Link
+						to="/admin-manage-user-by-activity"
+						className={styles.itemText}
+					>
+						Quản lý minh chứng theo hoạt động
 					</Link>
 				</Menu.Item>
 				<Menu.Item

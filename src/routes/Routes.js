@@ -1,5 +1,6 @@
 import { lazy } from 'react';
 
+const AdminManageUserByActivity = lazy(() => import('../pages/AdminManageUserByActivity'));
 const AdminManageOtherActivity = lazy(() => import('../pages/AdminManageOtherActivity'));
 const LoginAdmin = lazy(() => import('../pages/LoginAdmin'));
 const PageNotFound = lazy(() => import('../pages/PageNotFound'));
@@ -28,6 +29,12 @@ const routes = [
 	{
 		path: '/admin-manage-user',
 		component: AdminManageUser,
+		exact: true,
+		private: true,
+	},
+	{
+		path: '/admin-manage-user-by-activity',
+		component: AdminManageUserByActivity,
 		exact: true,
 		private: true,
 	},

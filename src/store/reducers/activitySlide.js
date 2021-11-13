@@ -2,8 +2,8 @@ import { createSlice } from '@reduxjs/toolkit';
 
 import {
 	addActivityAction,
+	addUserToActivityAction,
 	deleteActivityAction,
-	fetchActivityAction,
 	fetchAllActivityAction,
 	logoutAction,
 } from '../actions';
@@ -16,16 +16,6 @@ export const activity = createSlice({
 	},
 	extraReducers: (builder) => {
 		builder
-			.addCase(fetchActivityAction.fulfilled, (state, action) => {
-				state.value = action.payload;
-				state.loading = state.loading - 1;
-			})
-			.addCase(fetchActivityAction.pending, (state) => {
-				state.loading = state.loading + 1;
-			})
-			.addCase(fetchActivityAction.rejected, (state) => {
-				state.loading = state.loading - 1;
-			})
 			.addCase(fetchAllActivityAction.pending, (state) => {
 				state.loading = state.loading + 1;
 			})
@@ -46,6 +36,13 @@ export const activity = createSlice({
 				newValue.push(action.payload);
 
 				state.value = newValue;
+			})
+			.addCase(addUserToActivityAction.fulfilled, (state, action) => {
+                const {acId, uid, ...rest} = action.payload
+				
+                state.value = state.value.map(
+					(c) => c.id === acId ? {...c, users: c.users.map(d=> d.id === uid ? {...d, ...rest} : d)} : c
+				);
 			})
 			.addCase(logoutAction, (state) => {
 				state.value = [];

@@ -82,8 +82,6 @@ function useCreateEditOtherActivityModel({ title, action }) {
 
 	const onFinish = () => {
 		const data = Object.assign(form.getFieldsValue());
-		let date = dayjs(form.getFieldsValue().date).format('DD-MM-YYYY');
-		data.date = date;
 		let docId = dataModel.id || null;
 		console.log(data);
 

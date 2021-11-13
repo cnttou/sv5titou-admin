@@ -5,7 +5,6 @@ import {
 	cancelConfirmProofApi,
 	confirmProofApi,
 	getUserActivityApi,
-    getUserDetailApi,
 } from '../../api/firestore';
 
 export const loginAction = createAction('LOGIN');
@@ -16,14 +15,6 @@ export const addUserDetailAction = createAsyncThunk(
 	'user/addUserDetail',
 	async ({uid, data}) => {
 		let response = await addUserDetailApi(uid, data);
-		return response;
-	}
-);
-
-export const getUserDetailAction = createAsyncThunk(
-	'user/getUserDetail',
-	async (data) => {
-		let response = await getUserDetailApi(data);
 		return response;
 	}
 );

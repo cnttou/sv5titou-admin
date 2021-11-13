@@ -3,28 +3,6 @@ import firebase from './firebase';
 
 const db = firebase.firestore();
 
-export const addUrlImageApi = (fileName, acId = '') => {
-	let uId = firebase.auth().currentUser.uid;
-	return db
-		.collection('register_activity')
-		.doc(uId)
-		.collection('activities')
-		.doc(acId)
-		.update({
-			images: firebase.firestore.FieldValue.arrayUnion(fileName),
-		});
-};
-export const removeUrlImageApi = (fileName, acId = '') => {
-	let uId = firebase.auth().currentUser.uid;
-	return db
-		.collection('register_activity')
-		.doc(uId)
-		.collection('activities')
-		.doc(acId)
-		.update({
-			images: firebase.firestore.FieldValue.arrayRemove(fileName),
-		});
-};
 const getActivityByListId = (listId) => {
 	return db
 		.collection('news')
@@ -71,6 +49,50 @@ export const getAllRegisterActivityApi = (userId) => {
 		})
 		.catch((error) => console.log(error.message));
 };
+const getUserByListId = (listUid) => {
+	return db
+		.collection('register_activity')
+		.where(firebase.firestore.FieldPath.documentId(), 'in', listUid)
+		.get()
+		.then((querySnapshot) => {
+			let listData = [];
+			querySnapshot.forEach(async (doc) => {
+				listData.push({
+					...doc.data(),
+					id: doc.id,
+				});
+			});
+			return listData;
+		});
+};
+const getAllRegisterUserApi = (acId) => {
+	return db
+		.collection('news')
+		.doc(acId)
+		.collection('users')
+		.get()
+		.then(async (querySnapshot) => {
+			if (querySnapshot.empty) return [];
+			let dataUser = [];
+			querySnapshot.forEach((doc) => {
+				dataUser.push({
+					...doc.data(),
+					id: doc.id,
+				});
+			});
+			//dataUser = [{ id, confirm, proof, studentCode, displayName}]
+			if (dataUser.length === 0) return dataUser;
+
+			// let activities = await getUserByListId(dataUser.map((c) => c.id));
+
+			// return activities.map((c) => ({
+			// 	...dataUser.find((d) => d.id === c.id),
+			// 	...c,
+			// }));
+            return dataUser
+		})
+		.catch((error) => console.log(error.message));
+};
 export const removeRegisterActivityApi = (acId) => {
 	let uId = firebase.auth().currentUser.uid;
 	return db
@@ -80,28 +102,6 @@ export const removeRegisterActivityApi = (acId) => {
 		.doc(acId)
 		.delete()
 		.then(() => acId);
-};
-export const registerActivityApi = (dataActivity) => {
-	let uId = currentUser().uid;
-	let acId = dataActivity.id;
-	let activityRef = db.collection('news').doc(uId);
-
-	let data = {
-		confirm: false,
-		proof: false,
-		...dataActivity,
-		activityRef,
-	};
-	return db
-		.collection('register_activity')
-		.doc(uId)
-		.collection('activities')
-		.doc(acId)
-		.set(data)
-		.then((res) => {
-			console.log('res of register: ', res);
-			return { ...data, activityRef: activityRef.path || '' };
-		});
 };
 export const getDetailActivityApi = (docId = '') => {
 	return db
@@ -128,24 +128,12 @@ export const getAllActivitiesApi = () => {
 					id: doc.id,
 				});
 			});
-			return data;
-		});
-};
-export const getActivitiesApi = (limit = 25) => {
-	return db
-		.collection('news')
-		.where('active', '==', true)
-		.limit(limit)
-		.get()
-		.then((querySnapshot) => {
-			let data = [];
-			querySnapshot.forEach((doc) => {
-				data.push({
-					...doc.data(),
-					id: doc.id,
-				});
+
+			return Promise.all(
+				data.map((c) => getAllRegisterUserApi(c.id))
+			).then((res) => {
+				return data.map((c, index) => ({ ...c, users: res[index] }));
 			});
-			return data;
 		});
 };
 export const deleteDataApi = (collection, docId) => {
@@ -182,12 +170,12 @@ export const addUserDetailApi = (uid, data) => {
 		.then(() => ({ ...data, uid }))
 		.catch((err) => console.log(err.message));
 };
-export const getUserDetailApi = () => {
+export const getUserDetailApi = (uid) => {
 	return db
 		.collection('register_activity')
-		.doc(currentUser().uid)
+		.doc(uid)
 		.get()
-		.then((res) => res.data())
+		.then((res) => ({...res.data(), id: uid}))
 		.catch((err) => console.log(err.message));
 };
 export const getUserActivityApi = () => {
@@ -210,6 +198,11 @@ export const getUserActivityApi = () => {
 		});
 };
 export const confirmProofApi = (uid, acId) => {
+	db.collection('news')
+		.doc(acId)
+		.collection('users')
+		.doc(uid)
+		.update({ confirm: true });
 	return db
 		.collection('register_activity')
 		.doc(uid)
@@ -224,6 +217,11 @@ export const confirmProofApi = (uid, acId) => {
 		});
 };
 export const cancelConfirmProofApi = (uid, acId, confirm) => {
+	db.collection('news')
+		.doc(acId)
+		.collection('users')
+		.doc(uid)
+		.update({ confirm });
 	return db
 		.collection('register_activity')
 		.doc(uid)
@@ -239,6 +237,11 @@ export const cancelConfirmProofApi = (uid, acId, confirm) => {
 };
 export const cancelConfirmMyProofApi = (acId) => {
 	let uid = currentUser().uid;
+	db.collection('news')
+		.doc(acId)
+		.collection('users')
+		.doc(uid)
+		.update({ confirm: false });
 	return db
 		.collection('register_activity')
 		.doc(uid)
