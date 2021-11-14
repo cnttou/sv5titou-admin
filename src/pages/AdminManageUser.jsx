@@ -307,9 +307,9 @@ export default function AdminManageUser() {
 		},
 		{
 			title: 'Mssv',
-			key: 'mssv',
-			// searchFilter: true,
-			render: (item) => <p>{item.studentCode}</p>,
+			key: 'studentCode',
+            dataIndex: 'studentCode',
+			searchFilter: true,
 		},
 		{
 			title: 'Xét SV5T cấp',

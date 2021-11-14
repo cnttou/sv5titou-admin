@@ -1,6 +1,6 @@
 import { Layout, message, Typography } from 'antd';
 import { useHistory } from 'react-router-dom';
-import { loginWithEmailPasswordApi } from '../api/authentication';
+import { auth, loginWithEmailPasswordApi } from '../api/authentication';
 import { Form, Input, Button } from 'antd';
 import styles from '../styles/Login.module.css';
 
@@ -12,6 +12,12 @@ const regxEmail =
 
 export default function LoginAdmin() {
 	let history = useHistory();
+
+	auth().onAuthStateChanged((user) => {
+		if (user && user.uid) {
+            history.push('/admin')
+		}
+	});
 
 	const onFinish = (values) => {
         let username = values.username.toString();

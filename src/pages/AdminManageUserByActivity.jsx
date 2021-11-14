@@ -252,7 +252,8 @@ export default function AdminManageUserByActivity() {
 			pagination={false}
 			columns={columns}
 			expandable={{
-				rowExpandable: (record) => record.users.length !== 0,
+				rowExpandable: (record) =>
+					record.users && record.users.length !== 0,
 				expandedRowRender,
 			}}
 			dataSource={list}
