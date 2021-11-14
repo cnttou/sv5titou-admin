@@ -119,15 +119,6 @@ function useCreateEditOtherActivityModel({ title, action }) {
 					<Switch checked={active} onChange={setActive} />
 				</Form.Item>
 				<Form.Item
-					name="level"
-					label="Hoạt động cấp"
-					rules={[{ required: true }]}
-				>
-					<Select placeholder="Cấp của hoạt động">
-						{optionLevel}
-					</Select>
-				</Form.Item>
-				<Form.Item
 					name="name"
 					label="Tên chương trình"
 					rules={[{ required: true }]}

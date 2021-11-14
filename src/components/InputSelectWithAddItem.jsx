@@ -8,7 +8,7 @@ let index = 0;
 
 export default class InputSelectWithAddItem extends React.Component {
 	state = {
-		items: this.props.value || ['test1', 'test2'],
+		items: this.props.value || [''],
 		name: '',
 	};
 

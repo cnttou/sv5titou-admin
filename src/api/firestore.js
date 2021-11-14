@@ -89,7 +89,7 @@ const getAllRegisterUserApi = (acId) => {
 			// 	...dataUser.find((d) => d.id === c.id),
 			// 	...c,
 			// }));
-            return dataUser
+			return dataUser;
 		})
 		.catch((error) => console.log(error.message));
 };
@@ -175,7 +175,7 @@ export const getUserDetailApi = (uid) => {
 		.collection('register_activity')
 		.doc(uid)
 		.get()
-		.then((res) => ({...res.data(), id: uid}))
+		.then((res) => ({ ...res.data(), id: uid }))
 		.catch((err) => console.log(err.message));
 };
 export const getUserActivityApi = () => {
@@ -217,6 +217,7 @@ export const confirmProofApi = (uid, acId) => {
 		});
 };
 export const cancelConfirmProofApi = (uid, acId, confirm) => {
+	console.log('confirm is', confirm);
 	db.collection('news')
 		.doc(acId)
 		.collection('users')
@@ -229,7 +230,7 @@ export const cancelConfirmProofApi = (uid, acId, confirm) => {
 		.doc(acId)
 		.update({ confirm })
 		.then(() => {
-			return { uid, acId, confirm: false };
+			return { uid, acId, confirm };
 		})
 		.catch((error) => {
 			console.log(error.message);

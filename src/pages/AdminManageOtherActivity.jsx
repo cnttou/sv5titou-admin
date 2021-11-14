@@ -138,17 +138,6 @@ export default function AdminManageOtherActivity() {
 			render: (text) => text.map((c) => nameTarget[c]).join(', '),
 		},
 		{
-			title: 'Cấp hoạt động',
-			dataIndex: 'level',
-			key: 'level',
-			filters: Object.entries(nameLevelActivity).map((c) => ({
-				value: c[0],
-				text: c[1],
-			})),
-			onFilter: (value, record) => record.level === value,
-			render: (text) => nameLevelActivity[text],
-		},
-		{
 			title: 'Thao tác',
 			key: 'action',
 			render: (text, record) => (

@@ -91,13 +91,11 @@ export default function AdminManageUser() {
 	}, []);
 
 	const handleConfirm = (uid, acId, confirm) => {
-		let isConfirm = confirm === 'true';
 		console.log('handle confirm: ', { uid, acId, confirm });
-		if (isConfirm) dispatch(confirmProofAction({ uid, acId }));
-		else
-			dispatch(
-				cancelConfirmProofAction({ uid, acId, confirm: isConfirm })
-			);
+		if (confirm === 'true') dispatch(confirmProofAction({ uid, acId }));
+		else if (confirm === 'false')
+			dispatch(cancelConfirmProofAction({ uid, acId, confirm: false }));
+		else dispatch(cancelConfirmProofAction({ uid, acId, confirm }));
 	};
 	const handleClickNameActivity = (item, uid) => {
 		setDataModel({ ...item, uid });
@@ -118,7 +116,7 @@ export default function AdminManageUser() {
 			console.log('them thanh cong');
 		});
 	};
-	const expandedRowRender = (activity) => {
+	const expandedRowRender = (user) => {
 		const columns = [
 			{
 				title: 'Trạng thái',
@@ -146,7 +144,7 @@ export default function AdminManageUser() {
 						<Button
 							type="link"
 							onClick={() =>
-								handleClickNameActivity(item, activity.userId)
+								handleClickNameActivity(item, user.userId)
 							}
 						>
 							{item.name}
@@ -204,10 +202,9 @@ export default function AdminManageUser() {
 							value={option}
 							setValue={(key) =>
 								handleConfirm(
-									activity.userId,
+									user.userId,
 									item.id,
 									key,
-									item.proof
 								)
 							}
 							style={{
@@ -224,7 +221,7 @@ export default function AdminManageUser() {
 			<Table
 				columns={columns}
 				dataSource={
-					activity.listData.map((c, key) => ({ ...c, key })) || []
+					user.listData.map((c, key) => ({ ...c, key })) || []
 				}
 				size="small"
 				pagination={false}
