@@ -86,7 +86,7 @@ function ActivityFeed(props) {
 				<p>
 					<strong>Tiêu chí xét SV5T:</strong> {nameTarget[target]}
 				</p>
-				<p style={{ marginBottom: 0 }}>
+				<div style={{ marginBottom: 0 }}>
 					<strong>Thông tin chi tiết:</strong>
 					<ReactQuill
 						theme={null}
@@ -95,7 +95,7 @@ function ActivityFeed(props) {
 						className={showFull ? '' : styles.editer}
 						style={{ height: '100%' }}
 					/>
-				</p>
+				</div>
 				{images && (
 					<div>
 						<strong>Minh chứng đã thêm:</strong>

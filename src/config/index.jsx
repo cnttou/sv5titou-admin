@@ -39,7 +39,37 @@ export const fieldPesonal = {
 		parse: (value) => nameLevelRegister[value],
 	},
 	pointTraining: { label: 'Điểm rèn luyện' },
+	requireDaoDuc: {
+		label: 'Các Tiêu chuẩn đạo đức bắt buộc (Bảng điểm rèn luyện, 6 bài lý luận chính trị)',
+	},
+	otherDaoDuc: {
+		label: 'Các Tiêu chuẩn đạo đức khác',
+	},
 	gpa: { label: 'Điềm trung bình' },
+	requireHocTap: {
+		label: 'Các Tiêu chuẩn học tập bắt buộc (Bảng điểm học kỳ)',
+	},
+	otherHocTap: {
+		label: 'Các Tiêu chuẩn học tập khác',
+	},
+	targetTheLuc: {
+		label: 'Thể lực tốt',
+	},
+	targetTinhNguyen: {
+		label: 'Tình nguyện tốt',
+	},
+	targetNgoaiNgu: {
+		label: 'Về ngoại ngữ',
+	},
+	targetKyNang: {
+		label: 'Về kỹ năng',
+	},
+	targetHoiNhap: {
+		label: 'Về hội nhập',
+	},
+	targetOtherSuccess: {
+		label: 'Các thành tích tiêu biểu khác',
+	},
 	targetSuccess: {
 		label: 'Tiêu chí đã đạt',
 		parse: (value) => nameTarget[value],

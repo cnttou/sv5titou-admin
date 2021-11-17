@@ -8,8 +8,8 @@ import {
 	deleteDataApi,
 	addDataApi,
 	removeRegisterActivityApi,
-    getAllActivitiesApi,
-    getUserDetailApi,
+	getAllActivitiesApi,
+	getUserDetailApi,
 } from '../../api/firestore';
 
 export const fetchAllActivityAction = createAsyncThunk(
