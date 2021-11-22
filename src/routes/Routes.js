@@ -1,4 +1,5 @@
 import { lazy } from 'react';
+import AdminManageSlide from '../pages/AdminManageSlide';
 
 const AdminManageUserByActivity = lazy(() => import('../pages/AdminManageUserByActivity'));
 const AdminManageOtherActivity = lazy(() => import('../pages/AdminManageOtherActivity'));
@@ -23,6 +24,12 @@ const routes = [
 	{
 		path: '/admin-manage-other-activity',
 		component: AdminManageOtherActivity,
+		exact: true,
+		private: true,
+	},
+	{
+		path: '/admin-manage-slide',
+		component: AdminManageSlide,
 		exact: true,
 		private: true,
 	},

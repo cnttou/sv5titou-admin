@@ -121,13 +121,6 @@ function useCreateEditActivityModel({ title, action }) {
 					<Switch checked={active} onChange={setActive} />
 				</Form.Item>
 				<Form.Item
-					name="department"
-					label="Khoa"
-					rules={[{ required: true }]}
-				>
-					<Select placeholder="Chọn khoa">{optionDepartment}</Select>
-				</Form.Item>
-				<Form.Item
 					name="level"
 					label="Hoạt động cấp"
 					rules={[{ required: true }]}
@@ -135,6 +128,13 @@ function useCreateEditActivityModel({ title, action }) {
 					<Select placeholder="Cấp của hoạt động">
 						{optionLevel}
 					</Select>
+				</Form.Item>
+                <Form.Item
+					name="department"
+					label="Khoa"
+					rules={[{ required: false }]}
+				>
+					<Select placeholder="Chọn khoa">{optionDepartment}</Select>
 				</Form.Item>
 				<Form.Item
 					name="name"

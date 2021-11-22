@@ -1,27 +1,30 @@
 import { Layout, message, Typography } from 'antd';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { auth, loginWithEmailPasswordApi } from '../api/authentication';
 import { Form, Input, Button } from 'antd';
 import styles from '../styles/Login.module.css';
 
 const { Title } = Typography;
-const {Content} = Layout;
+const { Content } = Layout;
 
 const regxEmail =
 	/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/i;
 
 export default function LoginAdmin() {
 	let history = useHistory();
+	let location = useLocation();
+
+	let { from } = location.state || { from: { pathname: '/admin' } };
 
 	auth().onAuthStateChanged((user) => {
 		if (user && user.uid) {
-            history.push('/admin')
+			history.replace(from);
 		}
 	});
 
 	const onFinish = (values) => {
-        let username = values.username.toString();
-        let password = values.password.toString();
+		let username = values.username.toString();
+		let password = values.password.toString();
 		loginWithEmailPasswordApi(username, password)
 			.then((res) => {
 				history.push('/admin');

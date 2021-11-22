@@ -26,7 +26,6 @@ import useModelUser from '../hooks/useModelUser';
 import { CSVLink } from 'react-csv';
 
 const { Content } = Layout;
-const { confirm } = Modal;
 
 let option = [
 	{
@@ -70,9 +69,11 @@ const headerCsv = Object.entries(fieldPesonal).map(([k, v]) => ({
 	label: v.label,
 	key: k,
 }));
+
 export default function AdminManageUser() {
 	const dispatch = useDispatch();
 	const [csvData, setCsvData] = useState([]);
+	const [listRowChooseData, setListRowChooseData] = useState([]);
 	let { value: listUser, loading } = useSelector(
 		(state) => state.userActivity
 	);
@@ -102,75 +103,79 @@ export default function AdminManageUser() {
 					activity.images.length !== 0
 			)
 			.filter((avtivity) => {
-				Object.entries(condition).forEach(([k, v]) => {
-					if (k === 'target')
-						return v.every((e) => avtivity.target.includes(e));
-					if (k === 'name')
+                for (const [key, value] of Object.entries(condition)) {
+					if (key === 'target')
+						return value.every((e) => avtivity.target.includes(e));
+					if (key === 'name')
 						return (
 							avtivity.name
 								.toLowerCase()
-								.indexOf(v.toLowerCase()) !== -1
+								.indexOf(value.toLowerCase()) !== -1
 						);
-					else if (avtivity[k] !== v) return false;
-				});
-				return true;
+					else if (avtivity[key] !== value) return false;
+				}
+                return true;
 			})
 			.map((c) => c.images.map((d) => d.url).join(', '))
 			.join(', ');
 	};
 	useEffect(() => {
-		if (loading === 0 && csvData.length) {
+		if (loading === 0 && listRowChooseData.length) {
 			setCsvData(
-				csvData.map((c) => ({
-					...c,
-					sex: nameSex[c.sex],
-					targetSuccess: c.targetSuccess.length
-						? c.targetSuccess.map((c) => nameTarget[c]).join('-')
-						: '',
-					majors: nameMajors[c.majors],
-					department: nameDepartmentActivity[c.department],
-					levelReview: nameLevelRegister[c.levelReview],
-					targetOtherSuccess: filterctivity(c.listData, {
-						name: 'tiêu biểu',
-						typeActivity: 'other',
-					}),
-					targetHoiNhap: filterctivity(c.listData, {
-						target: ['hoi-nhap'],
-					}),
-					targetKyNang: filterctivity(c.listData, {
-						name: 'về hội nhập',
-						target: ['hoi-nhap'],
-					}),
-					targetNgoaiNgu: filterctivity(c.listData, {
-						name: 'về ngoại ngữ',
-						target: ['hoi-nhap'],
-					}),
-					targetTinhNguyen: filterctivity(c.listData, {
-						target: ['tinh-nguyen'],
-					}),
-					targetTheLuc: filterctivity(c.listData, {
-						target: ['the-luc'],
-					}),
-					otherHocTap: filterctivity(c.listData, {
-						target: ['hoc-tap'],
-						typeActivity: 'other',
-					}),
-					requireHocTap: filterctivity(c.listData, {
-						target: ['hoc-tap'],
-						typeActivity: 'require',
-					}),
-					otherDaoDuc: filterctivity(c.listData, {
-						target: ['dao-duc'],
-						typeActivity: 'other',
-					}),
-					requireDaoDuc: filterctivity(c.listData, {
-						target: ['dao-duc'],
-						typeActivity: 'require',
-					}),
-				}))
+				listUser
+					.filter((e) => listRowChooseData.includes(e.userId))
+					.map((c) => ({
+						...c,
+						sex: nameSex[c.sex],
+						targetSuccess: c.targetSuccess.length
+							? c.targetSuccess
+									.map((c) => nameTarget[c])
+									.join(', ')
+							: '',
+						majors: nameMajors[c.majors],
+						department: nameDepartmentActivity[c.department],
+						levelReview: nameLevelRegister[c.levelReview],
+						targetOtherSuccess: filterctivity(c.listData, {
+							name: 'tiêu biểu',
+							typeActivity: 'other',
+						}),
+						targetHoiNhap: filterctivity(c.listData, {
+							target: ['hoi-nhap'],
+						}),
+						targetKyNang: filterctivity(c.listData, {
+							target: ['ve-ky-nang'],
+						}),
+						targetNgoaiNgu: filterctivity(c.listData, {
+							target: ['ve-ngoai-ngu'],
+						}),
+						targetTinhNguyen: filterctivity(c.listData, {
+							target: ['tinh-nguyen'],
+						}),
+						targetTheLuc: filterctivity(c.listData, {
+							target: ['the-luc'],
+						}),
+						otherHocTap: filterctivity(c.listData, {
+							target: ['hoc-tap'],
+							typeActivity: 'other',
+						}),
+						requireHocTap: filterctivity(c.listData, {
+							target: ['hoc-tap'],
+							typeActivity: 'require',
+						}),
+						otherDaoDuc: filterctivity(c.listData, {
+							target: ['dao-duc'],
+							typeActivity: 'other',
+						}),
+						requireDaoDuc: filterctivity(c.listData, {
+							target: ['dao-duc'],
+							typeActivity: 'require',
+						}),
+					}))
 			);
-		}
-	}, [loading]);
+		} else {
+            setCsvData([]);
+        }
+	}, [loading, listUser, listRowChooseData]);
 	const handleConfirm = (uid, acId, confirm) => {
 		console.log('handle confirm: ', { uid, acId, confirm });
 		if (confirm === 'true') dispatch(confirmProofAction({ uid, acId }));
@@ -325,8 +330,8 @@ export default function AdminManageUser() {
 		);
 	};
 	const handleSelectRowTabel = (record, selected, selectedRows, e) => {
-		console.log(selectedRows);
-
+		console.log('selectedRowss', selectedRows);
+		let listUserId = [];
 		selectedRows.forEach((student) => {
 			student.listData.forEach((activity) => {
 				if (activity.confirm && !activity.images)
@@ -337,8 +342,9 @@ export default function AdminManageUser() {
 						})
 					);
 			});
+			listUserId.push(student.userId);
 		});
-		setCsvData(selectedRows);
+		setListRowChooseData(listUserId);
 	};
 	const columns = [
 		{
@@ -454,7 +460,7 @@ export default function AdminManageUser() {
 			<Space direction="horizontal">
 				{loading === 0 && csvData.length !== 0 && (
 					<CSVLink
-						filename={'data.csv'}
+						filename={'Export-SV5T.csv'}
 						data={csvData}
 						target="_blank"
 						headers={headerCsv}

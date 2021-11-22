@@ -5,11 +5,12 @@ let storage = firebase.storage();
 var storageRef = storage.ref();
 
 var imagesRef = storageRef.child('images');
+var imagesSlideRef = storageRef.child('images').child('slide');
 
 export const taskEvent = firebase.storage.TaskEvent.STATE_CHANGED;
 
-export const upFileApi = (acId, file) => {
-	let fileProofRef = imagesRef.child(currentUser().uid).child(acId);
+export const upFileApi = (id, file) => {
+	let fileProofRef = imagesSlideRef.child(id);
 	console.log('file upload', file);
 	return fileProofRef.child(`/${file.name}`).put(file);
 };

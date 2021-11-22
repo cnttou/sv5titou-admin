@@ -10,6 +10,10 @@ service cloud.firestore {
       	allow read, write, update: if request.auth.uid == 'bqiHeUsh3ASyhQshMsVpbdfwx3o1';
       }
     }
+    match /slide_show/{docId} {
+      allow read;
+      allow write, update, delete: if request.auth.uid == 'bqiHeUsh3ASyhQshMsVpbdfwx3o1';
+    }
     match /register_activity/{userId} {
       allow read, write, update: if request.auth != null && request.auth.uid == userId;
       allow read, write: if request.auth.uid == 'bqiHeUsh3ASyhQshMsVpbdfwx3o1';

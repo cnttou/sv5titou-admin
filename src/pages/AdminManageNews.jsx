@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
 	addActivityAction,
@@ -6,7 +6,7 @@ import {
 	fetchAllActivityAction,
 } from '../store/actions';
 import Loading from '../components/Loading';
-import { Space, Button, Layout, Switch, Modal } from 'antd';
+import { Space, Button, Layout, Switch, Modal, Carousel, Image } from 'antd';
 import { compareStringDate, compareStringName } from '../utils/compareFunction';
 import useCreateEditActivityModel from '../hooks/useCreateEditActivityModel';
 import styles from '../styles/Admin.module.css';
@@ -17,6 +17,7 @@ import {
 	nameLevelActivity,
 } from '../config';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { Link } from 'react-router-dom';
 
 const { Content } = Layout;
 const { confirm } = Modal;
@@ -35,9 +36,8 @@ const initActivity = {
 
 export default function AdminManageNews() {
 	const listNews = useSelector((state) =>
-		state.activity.value.filter((c) => c.typeActivity==='register')
+		state.activity.value.filter((c) => c.typeActivity === 'register')
 	);
-
 	const dispatch = useDispatch();
 
 	useEffect(() => {
@@ -210,3 +210,4 @@ export default function AdminManageNews() {
 		</Content>
 	);
 }
+

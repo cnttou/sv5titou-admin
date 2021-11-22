@@ -4,6 +4,7 @@ import {
 	AppstoreAddOutlined,
 	AppstoreOutlined,
 	AuditOutlined,
+	BulbOutlined,
 	LogoutOutlined,
 } from '@ant-design/icons';
 import styles from '../styles/Header.module.css';
@@ -42,7 +43,7 @@ export default function HeaderUser() {
 			>
 				<Menu.Item key="admin" icon={<AppstoreOutlined />}>
 					<Link to="/admin" className={styles.itemText}>
-						Quản lý hoạt động
+						Hoạt động
 					</Link>
 				</Menu.Item>
 				<Menu.Item
@@ -53,12 +54,17 @@ export default function HeaderUser() {
 						to="/admin-manage-other-activity"
 						className={styles.itemText}
 					>
-						Quản lý hoạt động khác
+						Hoạt động khác
+					</Link>
+				</Menu.Item>
+				<Menu.Item key="admin-manage-slide" icon={<BulbOutlined />}>
+					<Link to="/admin-manage-slide" className={styles.itemText}>
+						Quảng cáo
 					</Link>
 				</Menu.Item>
 				<Menu.Item key="admin-manage-user" icon={<AuditOutlined />}>
 					<Link to="/admin-manage-user" className={styles.itemText}>
-						Quản lý minh chứng theo tên SV
+						Minh chứng theo tên SV
 					</Link>
 				</Menu.Item>
 				<Menu.Item
@@ -69,7 +75,7 @@ export default function HeaderUser() {
 						to="/admin-manage-user-by-activity"
 						className={styles.itemText}
 					>
-						Quản lý minh chứng theo hoạt động
+						Minh chứng theo hoạt động
 					</Link>
 				</Menu.Item>
 				<Menu.Item

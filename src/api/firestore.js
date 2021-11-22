@@ -1,6 +1,8 @@
+import dayjs from 'dayjs';
 import { currentUser } from './authentication';
 import firebase from './firebase';
 
+const { Timestamp } = firebase.firestore;
 const db = firebase.firestore();
 
 const getActivityByListId = (listId) => {
@@ -113,6 +115,23 @@ export const getDetailActivityApi = (docId = '') => {
 				...doc.data(),
 				id: doc.id,
 			};
+			return data;
+		});
+};
+export const getSlideShowApi = () => {
+	return db
+		.collection('slide_show')
+		.get()
+		.then((querySnapshot) => {
+			let data = [];
+			querySnapshot.forEach((doc) => {
+				const { seconds, nanoseconds } = doc.data().deadline;
+				data.push({
+					...doc.data(),
+					id: doc.id,
+				});
+			});
+
 			return data;
 		});
 };
