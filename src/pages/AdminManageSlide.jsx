@@ -23,9 +23,11 @@ const initActivity = {
 };
 
 export default function AdminManageSlide() {
-	const { value: listSlideShow, loading } = useSelector(
-		(state) => state.slideShow
-	);
+	const {
+		value: listSlideShow,
+		loading,
+		deleting,
+	} = useSelector((state) => state.slideShow);
 
 	const dispatch = useDispatch();
 
@@ -88,7 +90,11 @@ export default function AdminManageSlide() {
 					<Button onClick={() => handleShowModelToEdit(record)}>
 						Sửa
 					</Button>
-					<Button danger onClick={() => handleDelete(record)}>
+					<Button
+						danger
+						onClick={() => handleDelete(record)}
+						loading={deleting}
+					>
 						Xóa
 					</Button>
 				</Space>

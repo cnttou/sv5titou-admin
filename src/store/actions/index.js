@@ -11,7 +11,7 @@ export const addSlideShowAction = createAsyncThunk(
 	'slideShow/addSlideShow',
 	async ({data, docId}) => {
 		let respone = await addDataApi('slide_show', data, docId);
-		return { ...respone, docId };
+		return respone;
 	}
 );
 export const fetchSlideShowAction = createAsyncThunk(

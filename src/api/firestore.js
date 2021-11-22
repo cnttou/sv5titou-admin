@@ -173,7 +173,7 @@ export const addDataApi = (collection = 'news', data, docId) => {
 			.collection(collection)
 			.doc(docId)
 			.set(data)
-			.then(() => ({ ...data, id: docId }));
+			.then(() => ({ ...data, id: docId, docId }));
 	}
 };
 export const addUserDetailApi = (uid, data) => {

@@ -20,6 +20,7 @@ import {
 	nameLevelActivity,
 	nameTarget,
 } from '../config';
+import InputUpload from '../components/InputUpload';
 
 const { Option } = Select;
 
@@ -65,6 +66,7 @@ function useCreateEditActivityModel({ title, action }) {
 	const [visible, setVisible] = useState(false);
 	const [dataModel, setDataModel] = useState(initActivity);
 	const [active, setActive] = useState(true);
+    const [loading, setLoading] = useState(false)
 
 	const dispatch = useDispatch();
 
@@ -79,6 +81,7 @@ function useCreateEditActivityModel({ title, action }) {
 	}, [dataModel]);
 
 	const onFinish = () => {
+        setLoading(true)
 		const data = Object.assign(form.getFieldsValue());
 		let date = dayjs(form.getFieldsValue().date).format('DD-MM-YYYY');
 		data.date = date;
@@ -89,13 +92,17 @@ function useCreateEditActivityModel({ title, action }) {
 		dispatch(addActivityAction({ data, docId }))
 			.then(() => {
 				setVisible(false);
+                setLoading(false);
 			})
 			.catch((err) => {
+                setLoading(false);
 				message.error('Thêm thất bại, vui lòng thử lại.');
 				console.log(err.message);
 			});
 	};
-
+	const handleUpload = (url) => {
+		form.setFieldsValue({ image: url });
+	};
 	const ui = () => (
 		<Modal
 			width={770}
@@ -129,12 +136,25 @@ function useCreateEditActivityModel({ title, action }) {
 						{optionLevel}
 					</Select>
 				</Form.Item>
-                <Form.Item
-					name="department"
-					label="Khoa"
-					rules={[{ required: false }]}
+				<Form.Item
+					noStyle
+					shouldUpdate={(prevValues, currentValues) =>
+						prevValues.level !== currentValues.level
+					}
 				>
-					<Select placeholder="Chọn khoa">{optionDepartment}</Select>
+					{({ getFieldValue }) =>
+						['lop', 'khoa'].includes(getFieldValue('level')) ? (
+							<Form.Item
+								name="department"
+								label="Khoa"
+								rules={[{ required: false }]}
+							>
+								<Select placeholder="Chọn khoa">
+									{optionDepartment}
+								</Select>
+							</Form.Item>
+						) : null
+					}
 				</Form.Item>
 				<Form.Item
 					name="name"
@@ -154,6 +174,23 @@ function useCreateEditActivityModel({ title, action }) {
 					>
 						{optionTarget}
 					</Select>
+				</Form.Item>
+				<Form.Item
+					label="Hình ảnh"
+					name="image"
+					rules={[{ required: false }]}
+				>
+					<Input
+						name="image"
+						placeholder="URL hình ảnh"
+						addonAfter={
+							<InputUpload
+                                id={dataModel.id}
+								name={'imageUpload'}
+								handleUpload={handleUpload}
+							/>
+						}
+					/>
 				</Form.Item>
 				<Form.Item
 					name="date"
@@ -202,7 +239,7 @@ function useCreateEditActivityModel({ title, action }) {
 						marginBottom: 0,
 					}}
 				>
-					<Button type="primary" block htmlType="submit">
+					<Button type="primary" block htmlType="submit" loading={loading}>
 						GỬI
 					</Button>
 				</Form.Item>

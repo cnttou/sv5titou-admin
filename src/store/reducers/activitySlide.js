@@ -25,28 +25,35 @@ export const activity = createSlice({
 			.addCase(fetchAllActivityAction.fulfilled, (state, action) => {
 				state.value = action.payload;
 				state.loading = state.loading - 1;
-			})
-			.addCase(deleteActivityAction.fulfilled, (state, action) => {
-				state.value = state.value.filter((c) => c.id != action.payload);
-			})
-			.addCase(addActivityAction.fulfilled, (state, action) => {
-				let newValue = state.value.filter(
-					(c) => c.id !== action.payload.id
-				);
-				newValue.push(action.payload);
-
-				state.value = newValue;
-			})
-			.addCase(addUserToActivityAction.fulfilled, (state, action) => {
-                const {acId, uid, ...rest} = action.payload
-				
-                state.value = state.value.map(
-					(c) => c.id === acId ? {...c, users: c.users.map(d=> d.id === uid ? {...d, ...rest} : d)} : c
-				);
-			})
-			.addCase(logoutAction, (state) => {
-				state.value = [];
 			});
+		builder.addCase(deleteActivityAction.fulfilled, (state, action) => {
+			state.value = state.value.filter((c) => c.id != action.payload);
+		});
+		builder.addCase(addActivityAction.fulfilled, (state, action) => {
+			let newValue = state.value.filter(
+				(c) => c.id !== action.payload.id
+			);
+			newValue.push(action.payload);
+
+			state.value = newValue;
+		});
+		builder.addCase(addUserToActivityAction.fulfilled, (state, action) => {
+			const { acId, uid, ...rest } = action.payload;
+
+			state.value = state.value.map((c) =>
+				c.id === acId
+					? {
+							...c,
+							users: c.users.map((d) =>
+								d.id === uid ? { ...d, ...rest } : d
+							),
+					  }
+					: c
+			);
+		});
+		builder.addCase(logoutAction, (state) => {
+			state.value = [];
+		});
 	},
 });
 
