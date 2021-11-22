@@ -1,22 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Loading from '../components/Loading';
 import {
 	addUserToActivityAction,
 	cancelConfirmProofAction,
+	comfirmActivityBuListStudentCodeAction,
 	confirmProofAction,
 	fetchAllActivityAction,
+	fetchUserByActivityAction,
 } from '../store/actions';
-import { Layout, Button, Switch } from 'antd';
+import { Layout, Button, Switch, Space, Input, message } from 'antd';
 import styles from '../styles/Admin.module.css';
 import useModelOnlyShowActivity from '../hooks/useModelOnlyShowActivity';
 import InputSelectWithAddItem from '../components/InputSelectWithAddItem';
-import {
-	nameLevelActivity,
-	nameLevelRegister,
-	nameTarget,
-	nameTypeActivity,
-} from '../config';
+import { nameLevelActivity, nameTarget, nameTypeActivity } from '../config';
 import TableCustom from '../components/TableCustom';
 import useModelUser from '../hooks/useModelUser';
 
@@ -47,8 +44,12 @@ let option = [
 ];
 
 export default function AdminManageUserByActivity() {
+	const [inputStudentCode, setInputStudentCode] = useState('');
 	const dispatch = useDispatch();
-	const { value: listNews, loading } = useSelector((s) => s.activity);
+	const { loading } = useSelector((s) => s.activity);
+	const listNews = useSelector((s) =>
+		s.activity.value.map((c, key) => ({ ...c, key }))
+	);
 	let { ui, setVisible, setDataModel } = useModelOnlyShowActivity({
 		title: 'Chi tiết hoạt động.',
 	});
@@ -66,15 +67,14 @@ export default function AdminManageUserByActivity() {
 			);
 	}, []);
 
-	const handleConfirm = (uid, acId, confirm) => {
-		let isConfirm = confirm === 'true';
+    const handleConfirm = (uid, acId, confirm) => {
 		console.log('handle confirm: ', { uid, acId, confirm });
-		if (isConfirm) dispatch(confirmProofAction({ uid, acId }));
-		else
-			dispatch(
-				cancelConfirmProofAction({ uid, acId, confirm: isConfirm })
-			);
+		if (confirm === 'true') dispatch(confirmProofAction({ uid, acId }));
+		else if (confirm === 'false')
+			dispatch(cancelConfirmProofAction({ uid, acId, confirm: false }));
+		else dispatch(cancelConfirmProofAction({ uid, acId, confirm }));
 	};
+
 	const handleClickNameActivity = (item, uid) => {
 		setDataModel({ ...item, uid });
 		setVisible(true);
@@ -88,7 +88,7 @@ export default function AdminManageUserByActivity() {
 		else setDataModelUser(item);
 		setVisibleUserModel(true);
 	};
-	const expandedRowRender = (activity) => {
+	const expandedRowRender = (ac, index) => {
 		const columns = [
 			{
 				title: 'Tên',
@@ -97,7 +97,11 @@ export default function AdminManageUserByActivity() {
 					<Button
 						type="link"
 						onClick={() =>
-							handleShowUserDetail(item.id, activity.id, item)
+							handleShowUserDetail(
+								item.id,
+								listNews[index].id,
+								item
+							)
 						}
 					>
 						{item.displayName}
@@ -110,21 +114,6 @@ export default function AdminManageUserByActivity() {
 				searchFilter: true,
 				dataIndex: 'studentCode',
 			},
-			// {
-			// 	title: 'Xét SV5T cấp',
-			// 	key: 'levelReview',
-			// 	filters: Object.entries(nameLevelRegister).map((c) => ({
-			// 		text: c[1],
-			// 		value: c[0],
-			// 	})),
-			// 	onFilter: (value, record) => record.levelReview === value,
-			// 	render: (item) => nameLevelRegister[item.levelReview],
-			// },
-			// {
-			// 	title: 'Lớp',
-			// 	key: 'classUser',
-			// 	render: (item) => <p>{item.classUser || 'Sv chưa điền'}</p>,
-			// },
 			{
 				title: 'Trạng thái',
 				key: 'confirm',
@@ -161,7 +150,7 @@ export default function AdminManageUserByActivity() {
 							defaultValue={item.confirm.toString()}
 							value={option}
 							setValue={(key) =>
-								handleConfirm(item.id, activity.id, key)
+								handleConfirm(item.id, listNews[index].id, key)
 							}
 							style={{
 								width: '100%',
@@ -174,15 +163,35 @@ export default function AdminManageUserByActivity() {
 		];
 
 		return (
-			<TableCustom
-				columns={columns}
-				dataSource={
-					activity.users.map((c, key) => ({ ...c, key })) || []
-				}
-				size="small"
-				pagination={false}
-			/>
+			<>
+				{listNews[index].users ? (
+					<TableCustom
+						columns={columns}
+						dataSource={listNews[index].users.map((c, key) => ({
+							...c,
+							key,
+						}))}
+						size="small"
+						pagination={false}
+					/>
+				) : null}
+			</>
 		);
+	};
+	const handleConfirmByListStudentCode = (acId, index) => {
+		const listStudentCode = inputStudentCode
+			.split(/[,. -]+/)
+			.filter((c) => c.length === 10 && parseInt(c) !== NaN);
+        
+        const listUserId = listNews[index].users
+			.filter((c) => listStudentCode.includes(c.studentCode))
+			.map((c) => c.id);
+        if (listUserId.length)
+			dispatch(
+				comfirmActivityBuListStudentCodeAction({ acId, listUserId })
+			);
+        else message.info("Không có SV có MSSV phù hợp để xác nhận")
+		console.log(listUserId);
 	};
 	const columns = [
 		{
@@ -245,16 +254,41 @@ export default function AdminManageUserByActivity() {
 			render: (item) => item.target.map((c) => nameTarget[c]).join(', '),
 		},
 		{ title: 'Ngày diễn ra', dataIndex: 'date', key: 'date' },
-	];
+		{
+			title: 'Xác nhận bằng danh sách MSSV',
+			key: 'action',
+			render: (text, record, index) => (
+                listNews[index]?.users?.length ?
+				<Space direction="horizontal">
+					<Input
+						onChange={(e) => setInputStudentCode(e.target.value)}
+					/>
 
+					<Button
+						onClick={() =>
+							handleConfirmByListStudentCode(record.id, index)
+						}
+					>
+						Thêm
+					</Button>
+				</Space>: null
+			),
+		},
+	];
+	const onExpand = (expanded, record) => {
+		console.log('CLicked expand', { expanded, record });
+		if (!record.users)
+			dispatch(fetchUserByActivityAction(record.id)).then((action) => {
+				record.users = action.payload.respone;
+			});
+	};
 	const loadTable = (list = []) => (
 		<TableCustom
 			pagination={false}
 			columns={columns}
 			expandable={{
-				rowExpandable: (record) =>
-					record.users && record.users.length !== 0,
 				expandedRowRender,
+				onExpand,
 			}}
 			dataSource={list}
 			size="small"
@@ -262,11 +296,7 @@ export default function AdminManageUserByActivity() {
 	);
 	return (
 		<Content className={styles.contentAdminManageUser}>
-			{listNews?.length ? (
-				loadTable(listNews.map((c, key) => ({ ...c, key })))
-			) : (
-				<Loading />
-			)}
+			{listNews?.length ? loadTable(listNews) : <Loading />}
 			{ui()}
 			{uiUserDetail()}
 		</Content>

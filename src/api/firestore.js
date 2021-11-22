@@ -67,7 +67,7 @@ const getUserByListId = (listUid) => {
 			return listData;
 		});
 };
-const getAllRegisterUserApi = (acId) => {
+export const getAllRegisterUserApi = (acId) => {
 	return db
 		.collection('news')
 		.doc(acId)
@@ -82,15 +82,6 @@ const getAllRegisterUserApi = (acId) => {
 					id: doc.id,
 				});
 			});
-			//dataUser = [{ id, confirm, proof, studentCode, displayName}]
-			if (dataUser.length === 0) return dataUser;
-
-			// let activities = await getUserByListId(dataUser.map((c) => c.id));
-
-			// return activities.map((c) => ({
-			// 	...dataUser.find((d) => d.id === c.id),
-			// 	...c,
-			// }));
 			return dataUser;
 		})
 		.catch((error) => console.log(error.message));
@@ -147,12 +138,7 @@ export const getAllActivitiesApi = () => {
 					id: doc.id,
 				});
 			});
-
-			return Promise.all(
-				data.map((c) => getAllRegisterUserApi(c.id))
-			).then((res) => {
-				return data.map((c, index) => ({ ...c, users: res[index] }));
-			});
+			return data;
 		});
 };
 export const deleteDataApi = (collection, docId) => {
@@ -214,6 +200,16 @@ export const getUserActivityApi = () => {
 			).then((res) => {
 				return rs.map((c, index) => ({ ...c, listData: res[index] }));
 			});
+		});
+};
+export const confirmProofByListStudentCodeApi = (acId, listUserId) => {
+	return Promise.all(listUserId.map((id) => confirmProofApi(id, acId)))
+		.then((listRes) => {
+            console.log("listRes", listRes)
+			return { listUserId, acId, confirm: true };
+		})
+		.catch((error) => {
+			console.log(error.message);
 		});
 };
 export const confirmProofApi = (uid, acId) => {

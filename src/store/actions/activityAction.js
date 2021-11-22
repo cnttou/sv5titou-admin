@@ -10,12 +10,29 @@ import {
 	removeRegisterActivityApi,
 	getAllActivitiesApi,
 	getUserDetailApi,
+	getAllRegisterUserApi,
+	confirmProofByListStudentCodeApi,
 } from '../../api/firestore';
 
 export const fetchAllActivityAction = createAsyncThunk(
 	'news/fetchAllNews',
 	async () => {
 		let respone = await getAllActivitiesApi();
+		return respone;
+	}
+);
+
+export const fetchUserByActivityAction = createAsyncThunk(
+	'news/fetchUserByActivity',
+	async (acId) => {
+		let respone = await getAllRegisterUserApi(acId);
+		return { respone, acId };
+	}
+);
+export const comfirmActivityBuListStudentCodeAction = createAsyncThunk(
+	'news/comfirmByListStudentCode',
+	async ({ acId, listUserId }) => {
+		let respone = await confirmProofByListStudentCodeApi(acId, listUserId);
 		return respone;
 	}
 );
