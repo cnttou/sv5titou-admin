@@ -41,7 +41,6 @@ function useCreateEditSlideShowModel({ title, action }) {
 		form.setFieldsValue({
 			image: url,
 		});
-		setDataModel((preState) => ({ ...preState, image: url }));
 	};
 
 	const onFinish = () => {
@@ -82,6 +81,23 @@ function useCreateEditSlideShowModel({ title, action }) {
 				onFinish={onFinish}
 				validateMessages={{ required: 'Vui lòng điền thông tin' }}
 			>
+                <Form.Item
+					label="Hình ảnh"
+					name="image"
+					rules={[{ required: true }]}
+				>
+					<Input
+						name="image"
+						placeholder="URL hình ảnh"
+						addonAfter={
+							<InputUpload
+								name={'imageUpload'}
+								handleUpload={handleUpload}
+								id={dataModel.id || ''}
+							/>
+						}
+					/>
+				</Form.Item>
 				<Form.Item
 					name="url"
 					label="Link truy cập"
@@ -102,23 +118,6 @@ function useCreateEditSlideShowModel({ title, action }) {
 								deadline: dayjs(dateStr, 'DD-MM-YYYY'),
 							});
 						}}
-					/>
-				</Form.Item>
-				<Form.Item
-					label="Hình ảnh"
-					name="image"
-					rules={[{ required: true }]}
-				>
-					<Input
-						name="image"
-						placeholder="URL hình ảnh"
-						addonAfter={
-							<InputUpload
-								name={'imageUpload'}
-								handleUpload={handleUpload}
-								id={dataModel.id || ''}
-							/>
-						}
 					/>
 				</Form.Item>
 				<Form.Item

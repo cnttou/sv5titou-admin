@@ -25,7 +25,7 @@ const { confirm } = Modal;
 
 const initActivity = {
 	id: genId(20),
-    image: '',
+    image: '',  
 	active: true,
 	department: null,
 	level: null,

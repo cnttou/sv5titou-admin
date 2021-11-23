@@ -38,34 +38,18 @@ export const getAllRegisterActivityApi = (userId) => {
 				});
 			});
 
-			if (dataUser.length === 0) return dataUser;
+			return dataUser;
 
-			let activities = await getActivityByListId(
-				dataUser.map((c) => c.id)
-			);
+			// let activities = await getActivityByListId(
+			// 	dataUser.map((c) => c.id)
+			// );
 
-			return activities.map((c) => ({
-				...dataUser.find((d) => d.id === c.id),
-				...c,
-			}));
+			// return activities.map((c) => ({
+			// 	...dataUser.find((d) => d.id === c.id),
+			// 	...c,
+			// }));
 		})
 		.catch((error) => console.log(error.message));
-};
-const getUserByListId = (listUid) => {
-	return db
-		.collection('register_activity')
-		.where(firebase.firestore.FieldPath.documentId(), 'in', listUid)
-		.get()
-		.then((querySnapshot) => {
-			let listData = [];
-			querySnapshot.forEach(async (doc) => {
-				listData.push({
-					...doc.data(),
-					id: doc.id,
-				});
-			});
-			return listData;
-		});
 };
 export const getAllRegisterUserApi = (acId) => {
 	return db
@@ -202,6 +186,11 @@ export const getUserActivityApi = () => {
 			});
 		});
 };
+// export const getActivityOfUserApi = uid =>{
+//     return getAllRegisterActivityApi(uid).then((res) => {
+// 		return rs.map((c, index) => ({ ...c, listData: res[index] }));
+// 	});
+// }
 export const confirmProofByListStudentCodeApi = (acId, listUserId) => {
 	return Promise.all(listUserId.map((id) => confirmProofApi(id, acId)))
 		.then((listRes) => {

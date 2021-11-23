@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { deleteSlideShowAction, fetchSlideShowAction } from '../store/actions';
 import Loading from '../components/Loading';
-import { Space, Button, Layout, Modal } from 'antd';
+import { Space, Button, Layout, Modal, Typography } from 'antd';
 import styles from '../styles/Admin.module.css';
 import TableCustom from '../components/TableCustom';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
@@ -66,6 +66,11 @@ export default function AdminManageSlide() {
 			title: 'Link truy cập',
 			dataIndex: 'url',
 			key: 'url',
+			render: (text) => (
+				<Typography.Paragraph ellipsis={{ rows: 2, expandable: false }}>
+					{text}
+				</Typography.Paragraph>
+			),
 		},
 		{
 			title: 'Thời hạn',

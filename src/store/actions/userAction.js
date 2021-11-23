@@ -4,6 +4,7 @@ import {
 	cancelConfirmMyProofApi,
 	cancelConfirmProofApi,
 	confirmProofApi,
+	getAllRegisterActivityApi,
 	getUserActivityApi,
 } from '../../api/firestore';
 
@@ -24,6 +25,13 @@ export const fetchUserActivityAction = createAsyncThunk(
 	async () => {
 		let response = await getUserActivityApi();
 		return response;
+	}
+    );
+export const fetchActivityByUserAction = createAsyncThunk(
+	'user/fetchActivityByUser',
+	async (userId) => {
+		let response = await getAllRegisterActivityApi(userId);
+		return {response, userId};
 	}
 );
 export const confirmProofAction = createAsyncThunk(

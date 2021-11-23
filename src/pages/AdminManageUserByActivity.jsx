@@ -177,7 +177,7 @@ export default function AdminManageUserByActivity() {
 	const handleConfirmByListStudentCode = (acId, index) => {
 		const listStudentCode = inputStudentCode
 			.split(/[,. -]+/)
-			.filter((c) => c.length === 10 && parseInt(c) !== NaN);
+			.filter((c) => c.length === 10 && parseInt(c));
 
 		const listUserId = activity.users
 			.filter((c) => listStudentCode.includes(c.studentCode))

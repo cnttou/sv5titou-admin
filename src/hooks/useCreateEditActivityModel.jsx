@@ -37,6 +37,7 @@ const initActivity = {
 	department: null,
 	level: null,
 	name: '',
+    image: '',
 	date: null,
 	location: '',
 	summary: '',

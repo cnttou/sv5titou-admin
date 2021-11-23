@@ -5,6 +5,8 @@ import {
 	addUserDetailAction,
 	cancelConfirmProofAction,
 	confirmProofAction,
+	fetchActivityByUserAction,
+	fetchAllActivityAction,
 	fetchUserActivityAction,
 	getImageProofAction,
 } from '../store/actions';
@@ -24,10 +26,11 @@ import {
 import TableCustom from '../components/TableCustom';
 import useModelUser from '../hooks/useModelUser';
 import { CSVLink } from 'react-csv';
+import { addActivityDetailByUid } from '../store/reducers/userActivity';
 
 const { Content } = Layout;
 
-let option = [
+const option = [
 	{
 		key: 'false',
 		label: 'Chưa xác nhận',
@@ -74,9 +77,12 @@ export default function AdminManageUser() {
 	const dispatch = useDispatch();
 	const [csvData, setCsvData] = useState([]);
 	const [listRowChooseData, setListRowChooseData] = useState([]);
-	let { value: listUser, loading } = useSelector(
-		(state) => state.userActivity
-	);
+	let {
+		value: listUser,
+		loading,
+		loadingListData,
+	} = useSelector((state) => state.userActivity);
+	const listNews = useSelector((state) => state.activity.value);
 	let { ui, setVisible, setDataModel } = useModelOnlyShowActivity({
 		title: 'Chi tiết hoạt động.',
 	});
@@ -87,9 +93,18 @@ export default function AdminManageUser() {
 	} = useModelUser({
 		title: 'Chi tiết người dùng',
 	});
-	useEffect(async () => {
+	
+    useEffect(async () => {
 		if (listUser.length === 0)
-			dispatch(fetchUserActivityAction()).catch((error) =>
+			dispatch(fetchUserActivityAction()).then(()=>{
+                if (listNews.length === 0) {
+                    dispatch(fetchAllActivityAction()).then((action)=>{
+                        dispatch(addActivityDetailByUid(action.payload));
+                    });
+                } else{
+                    dispatch(addActivityDetailByUid(listNews));
+                }
+            }).catch((error) =>
 				console.log(error.message)
 			);
 	}, []);
@@ -103,7 +118,7 @@ export default function AdminManageUser() {
 					activity.images.length !== 0
 			)
 			.filter((avtivity) => {
-                for (const [key, value] of Object.entries(condition)) {
+				for (const [key, value] of Object.entries(condition)) {
 					if (key === 'target')
 						return value.every((e) => avtivity.target.includes(e));
 					if (key === 'name')
@@ -114,7 +129,7 @@ export default function AdminManageUser() {
 						);
 					else if (avtivity[key] !== value) return false;
 				}
-                return true;
+				return true;
 			})
 			.map((c) => c.images.map((d) => d.url).join(', '))
 			.join(', ');
@@ -173,8 +188,8 @@ export default function AdminManageUser() {
 					}))
 			);
 		} else {
-            setCsvData([]);
-        }
+			setCsvData([]);
+		}
 	}, [loading, listUser, listRowChooseData]);
 	const handleConfirm = (uid, acId, confirm) => {
 		console.log('handle confirm: ', { uid, acId, confirm });
@@ -300,14 +315,18 @@ export default function AdminManageUser() {
 		];
 
 		return (
-			<Table
-				columns={columns}
-				dataSource={
-					user.listData.map((c, key) => ({ ...c, key })) || []
-				}
-				size="small"
-				pagination={false}
-			/>
+			<>
+				{user.listData && (
+					<Table
+						columns={columns}
+						dataSource={
+							user.listData.map((c, key) => ({ ...c, key })) || []
+						}
+						size="small"
+						pagination={false}
+					/>
+				)}
+			</>
 		);
 	};
 	const tagRender = (props) => {
@@ -346,46 +365,21 @@ export default function AdminManageUser() {
 		});
 		setListRowChooseData(listUserId);
 	};
+	const onExpand = (expanded, record) => {
+		console.log('CLicked expand', { expanded, record });
+		if (!record.listData)
+			dispatch(fetchActivityByUserAction(record.userId));
+	};
 	const columns = [
 		{
 			title: 'Tên',
-			key: 'name',
-			filters: [
-				{
-					text: 'Có đăng ký hoạt động',
-					value: 'registered',
-				},
-				{
-					text: 'Không đăng ký hoạt động',
-					value: 'unregistered',
-				},
-				{
-					text: 'Có hoạt động chưa xác nhận',
-					value: 'notConfirm',
-				},
-			],
-			onFilter: (value, record) => {
-				if (value === 'registered' && record.listData.length !== 0)
-					return true;
-				else if (
-					value === 'unregistered' &&
-					record.listData.length === 0
-				)
-					return true;
-				else if (value === 'notConfirm')
-					return record.listData.filter((c) => c.confirm === false)
-						.length;
-
-				return false;
-			},
-			// searchFilter: true,
-			// defaultFilteredValue: ['notConfirm'],
-			render: (item, record) => (
+			key: 'fullName',
+			render: (record) => (
 				<Button
 					type="link"
 					onClick={() => handleShowUserDetail(record)}
 				>
-					{item.fullName}
+					{record.fullName}
 				</Button>
 			),
 		},
@@ -403,12 +397,13 @@ export default function AdminManageUser() {
 				value: c[0],
 			})),
 			onFilter: (value, record) => record.levelReview === value,
-			render: (item) => nameLevelRegister[item.levelReview],
+			render: (record) => nameLevelRegister[record.levelReview],
 		},
 		{
 			title: 'Lớp',
 			key: 'classUser',
-			render: (item) => <p>{item.classUser || 'Sv chưa điền'}</p>,
+			dataIndex: 'classUser',
+			searchFilter: true,
 		},
 		{
 			title: 'Đã hoàn thành',
@@ -422,7 +417,7 @@ export default function AdminManageUser() {
 					return record.targetSuccess.includes(value) || false;
 				else return false;
 			},
-			render: (text, record) => (
+			render: (record) => (
 				<Select
 					maxTagCount="responsive"
 					mode="tags"
@@ -444,7 +439,7 @@ export default function AdminManageUser() {
 			pagination={false}
 			columns={columns}
 			expandable={{
-				rowExpandable: (record) => record.listData.length !== 0,
+				onExpand,
 				expandedRowRender,
 			}}
 			rowSelection={{
