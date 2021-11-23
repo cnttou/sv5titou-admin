@@ -67,7 +67,7 @@ export default function AdminManageUserByActivity() {
 			);
 	}, []);
 
-    const handleConfirm = (uid, acId, confirm) => {
+	const handleConfirm = (uid, acId, confirm) => {
 		console.log('handle confirm: ', { uid, acId, confirm });
 		if (confirm === 'true') dispatch(confirmProofAction({ uid, acId }));
 		else if (confirm === 'false')
@@ -88,7 +88,7 @@ export default function AdminManageUserByActivity() {
 		else setDataModelUser(item);
 		setVisibleUserModel(true);
 	};
-	const expandedRowRender = (ac, index) => {
+	const expandedRowRender = (activity, index) => {
 		const columns = [
 			{
 				title: 'Tên',
@@ -97,11 +97,7 @@ export default function AdminManageUserByActivity() {
 					<Button
 						type="link"
 						onClick={() =>
-							handleShowUserDetail(
-								item.id,
-								listNews[index].id,
-								item
-							)
+							handleShowUserDetail(item.id, activity.id, item)
 						}
 					>
 						{item.displayName}
@@ -150,7 +146,7 @@ export default function AdminManageUserByActivity() {
 							defaultValue={item.confirm.toString()}
 							value={option}
 							setValue={(key) =>
-								handleConfirm(item.id, listNews[index].id, key)
+								handleConfirm(item.id, activity.id, key)
 							}
 							style={{
 								width: '100%',
@@ -164,10 +160,10 @@ export default function AdminManageUserByActivity() {
 
 		return (
 			<>
-				{listNews[index].users ? (
+				{activity.users ? (
 					<TableCustom
 						columns={columns}
-						dataSource={listNews[index].users.map((c, key) => ({
+						dataSource={activity.users.map((c, key) => ({
 							...c,
 							key,
 						}))}
@@ -182,15 +178,15 @@ export default function AdminManageUserByActivity() {
 		const listStudentCode = inputStudentCode
 			.split(/[,. -]+/)
 			.filter((c) => c.length === 10 && parseInt(c) !== NaN);
-        
-        const listUserId = listNews[index].users
+
+		const listUserId = activity.users
 			.filter((c) => listStudentCode.includes(c.studentCode))
 			.map((c) => c.id);
-        if (listUserId.length)
+		if (listUserId.length)
 			dispatch(
 				comfirmActivityBuListStudentCodeAction({ acId, listUserId })
 			);
-        else message.info("Không có SV có MSSV phù hợp để xác nhận")
+		else message.info('Không có SV có MSSV phù hợp để xác nhận');
 		console.log(listUserId);
 	};
 	const columns = [
@@ -257,22 +253,24 @@ export default function AdminManageUserByActivity() {
 		{
 			title: 'Xác nhận bằng danh sách MSSV',
 			key: 'action',
-			render: (text, record, index) => (
-                listNews[index]?.users?.length ?
-				<Space direction="horizontal">
-					<Input
-						onChange={(e) => setInputStudentCode(e.target.value)}
-					/>
+			render: (text, record, index) =>
+				listNews[index]?.users?.length ? (
+					<Space direction="horizontal">
+						<Input
+							onChange={(e) =>
+								setInputStudentCode(e.target.value)
+							}
+						/>
 
-					<Button
-						onClick={() =>
-							handleConfirmByListStudentCode(record.id, index)
-						}
-					>
-						Thêm
-					</Button>
-				</Space>: null
-			),
+						<Button
+							onClick={() =>
+								handleConfirmByListStudentCode(record.id, index)
+							}
+						>
+							Thêm
+						</Button>
+					</Space>
+				) : null,
 		},
 	];
 	const onExpand = (expanded, record) => {
