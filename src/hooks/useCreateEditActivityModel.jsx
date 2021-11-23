@@ -147,7 +147,7 @@ function useCreateEditActivityModel({ title, action }) {
 							<Form.Item
 								name="department"
 								label="Khoa"
-								rules={[{ required: false }]}
+								rules={[{ required: true }]}
 							>
 								<Select placeholder="Chọn khoa">
 									{optionDepartment}

@@ -16,11 +16,10 @@ const tailLayout = {
 };
 
 const initActivity = {
-	title: '',
+    id: 0,
 	deadline: null,
-	link: '',
+	url: '',
 	image: null,
-	description: '',
 };
 
 function useCreateEditSlideShowModel({ title, action }) {
@@ -84,11 +83,11 @@ function useCreateEditSlideShowModel({ title, action }) {
 				validateMessages={{ required: 'Vui lòng điền thông tin' }}
 			>
 				<Form.Item
-					name="title"
-					label="Tên tiêu đề"
+					name="url"
+					label="Link truy cập"
 					rules={[{ required: false }]}
 				>
-					<Input placeholder="Nhập tên tiêu đề" />
+					<Input placeholder="Nhập đường dẫn vd: https://ou.edu.vn/" />
 				</Form.Item>
 				<Form.Item
 					name="deadline"
@@ -121,13 +120,6 @@ function useCreateEditSlideShowModel({ title, action }) {
 							/>
 						}
 					/>
-				</Form.Item>
-				<Form.Item
-					label="Nội dung"
-					name="description"
-					rules={[{ required: false }]}
-				>
-					<Input placeholder="Nhập nội dung" />
 				</Form.Item>
 				<Form.Item
 					{...tailLayout}

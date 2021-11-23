@@ -15,11 +15,9 @@ const { confirm } = Modal;
 
 const initActivity = {
 	id: genId(20),
-	title: '',
 	deadline: null,
-	link: '',
+	url: '',
 	image: null,
-	description: '',
 };
 
 export default function AdminManageSlide() {
@@ -65,10 +63,9 @@ export default function AdminManageSlide() {
 	});
 	const columns = [
 		{
-			title: 'Tiêu đề',
-			dataIndex: 'title',
-			key: 'title',
-			searchFilter: true,
+			title: 'Link truy cập',
+			dataIndex: 'url',
+			key: 'url',
 		},
 		{
 			title: 'Thời hạn',

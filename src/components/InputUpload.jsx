@@ -2,12 +2,19 @@ import { Upload, Button, Progress } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { taskEvent, upFileApi } from '../api/firebaseStorage';
 import { useState } from 'react';
+import imageCompression from 'browser-image-compression';
 
 const initInputUpload = {
 	onUploadSuccess: true,
 	onUploadStart: false,
 	onUploadError: null,
 	uploadProgress: 0,
+};
+
+const options = {
+	maxSizeMB: 1,
+	maxWidthOrHeight: 1920,
+	useWebWorker: true,
 };
 
 function InputUpload({ text, id, ...props }) {
@@ -26,36 +33,57 @@ function InputUpload({ text, id, ...props }) {
 		}
 		return isLt5M;
 	};
-	const handleUpload = (data) => {
-		const task = upFileApi(id, data.file);
+	const compressImage = async (file) => {
+		options.onProgress = (percent) => {
+			setState('onUploadStart', true);
+			setState('uploadProgress', Math.round(percent / 2));
+		};
+		return imageCompression(file, options)
+			.then(function (compressedFile) {
+				console.log(
+					'compressedFile instanceof Blob',
+					compressedFile instanceof Blob
+				); // true
+				console.log(
+					`compressedFile size ${
+						compressedFile.size / 1024 / 1024
+					} MB`
+				); // smaller than maxSizeMB
+
+				return compressedFile;
+			})
+			.catch(function (error) {
+				console.log(error.message);
+			});
+	};
+	const handleUpload = async (data) => {
+		const file = await compressImage(data.file);
+		const task = upFileApi(id, file);
 		task.on(
 			taskEvent,
 			(snapshot) => {
 				const progress = Math.round(
-					(100 * snapshot.bytesTransferred) / snapshot.totalBytes
+					(100 * snapshot.bytesTransferred) / snapshot.totalBytes / 2
 				);
-				data.file.percent = progress;
 				setState('onUploadStart', true);
 				setState('uploadProgress', progress);
 			},
 			(error) => {
-				data.file.status = 'error';
 				message.error('Có lỗi xảy ra vui lòng thử lại');
 				setState('onUploadError', error);
 				setState('onUploadSuccess', false);
 			},
 			() => {
-				data.file.status = 'success';
 				setState('onUploadSuccess', true);
 				setState('onUploadStart', false);
 			}
 		);
-		task.then((snapshot) => {
-			data.file.status = 'done';
-			snapshot.ref.getDownloadURL().then((url) => {
-				props.handleUpload(url);
+        if (props.handleUpload)
+			task.then((snapshot) => {
+				snapshot.ref.getDownloadURL().then((url) => {
+					props.handleUpload(url);
+				});
 			});
-		});
 	};
 	return (
 		<>
