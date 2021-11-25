@@ -24,7 +24,6 @@ export default function AdminManageSlide() {
 	const {
 		value: listSlideShow,
 		loading,
-		deleting,
 	} = useSelector((state) => state.slideShow);
 
 	const dispatch = useDispatch();
@@ -95,7 +94,6 @@ export default function AdminManageSlide() {
 					<Button
 						danger
 						onClick={() => handleDelete(record)}
-						loading={deleting}
 					>
 						Xóa
 					</Button>

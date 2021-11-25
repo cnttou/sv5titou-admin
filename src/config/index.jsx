@@ -94,8 +94,9 @@ export const nameTarget = {
 	'dao-duc': 'Đạo đức tốt',
 	'tinh-nguyen': 'Tình nguyện tốt',
 	'the-luc': 'Thể lực tốt',
-    've-ngoai-ngu': "Về ngoại ngữ",
-    've-ky-nang': "Về kỹ năng",
+	've-ngoai-ngu': 'Về ngoại ngữ',
+	've-ky-nang': 'Về kỹ năng',
+	'tieu-bieu-khac': 'Các thành tích tiêu biểu khác',
 };
 export const nameMajors = {
 	7220201: 'Ngôn ngữ Anh',

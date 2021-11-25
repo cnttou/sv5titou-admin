@@ -142,7 +142,7 @@ export default function AdminManageUser() {
 					.map((c) => ({
 						...c,
 						sex: nameSex[c.sex],
-						targetSuccess: c.targetSuccess.length
+						targetSuccess: c?.targetSuccess?.length
 							? c.targetSuccess
 									.map((c) => nameTarget[c])
 									.join(', ')
@@ -151,8 +151,7 @@ export default function AdminManageUser() {
 						department: nameDepartmentActivity[c.department],
 						levelReview: nameLevelRegister[c.levelReview],
 						targetOtherSuccess: filterctivity(c.listData, {
-							name: 'tiêu biểu',
-							typeActivity: 'other',
+							target: ['tieu-bieu-khac'],
 						}),
 						targetHoiNhap: filterctivity(c.listData, {
 							target: ['hoi-nhap'],
