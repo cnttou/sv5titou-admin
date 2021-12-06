@@ -2,14 +2,20 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Loading from '../components/Loading';
 import {
-	addUserToActivityAction,
-	cancelConfirmProofAction,
 	comfirmActivityBuListStudentCodeAction,
-	confirmProofAction,
-	fetchAllActivityAction,
-	fetchUserByActivityAction,
+	updateConfirmProofAction,
+	getAllDataAction,
 } from '../store/actions';
-import { Layout, Button, Switch, Space, Input, message } from 'antd';
+import {
+	Layout,
+	Button,
+	Switch,
+	Space,
+	Input,
+	message,
+	Modal,
+	Typography,
+} from 'antd';
 import styles from '../styles/Admin.module.css';
 import useModelOnlyShowActivity from '../hooks/useModelOnlyShowActivity';
 import InputSelectWithAddItem from '../components/InputSelectWithAddItem';
@@ -17,9 +23,30 @@ import { nameLevelActivity, nameTarget, nameTypeActivity } from '../config';
 import TableCustom from '../components/TableCustom';
 import useModelUser from '../hooks/useModelUser';
 
+const { Text } = Typography;
 const { Content } = Layout;
+const { confirm } = Modal;
 
-let option = [
+const filterConfirm = [
+	{
+		text: 'Đã xác nhận',
+		value: 'true',
+	},
+	{
+		text: 'Chưa xác nhận',
+		value: 'false',
+	},
+	{
+		text: 'MC không hợp lệ',
+		value: 'cancel',
+	},
+	{
+		text: 'Chưa thêm minh chứng',
+		value: 'notproof',
+	},
+];
+
+const option = [
 	{
 		key: 'false',
 		label: 'Chưa xác nhận',
@@ -46,7 +73,6 @@ let option = [
 export default function AdminManageUserByActivity() {
 	const [inputStudentCode, setInputStudentCode] = useState('');
 	const dispatch = useDispatch();
-	const { loading } = useSelector((s) => s.activity);
 	const listNews = useSelector((s) =>
 		s.activity.value.map((c, key) => ({ ...c, key }))
 	);
@@ -61,31 +87,19 @@ export default function AdminManageUserByActivity() {
 		title: 'Chi tiết người dùng',
 	});
 	useEffect(async () => {
-		if (listNews.length === 0)
-			dispatch(fetchAllActivityAction()).catch((error) =>
-				console.log(error.message)
-			);
+		if (listNews.length === 0) dispatch(getAllDataAction());
 	}, []);
 
 	const handleConfirm = (uid, acId, confirm) => {
 		console.log('handle confirm: ', { uid, acId, confirm });
-		if (confirm === 'true') dispatch(confirmProofAction({ uid, acId }));
+		if (confirm === 'true')
+			return dispatch(updateConfirmProofAction({ uid, acId, confirm: true }));
 		else if (confirm === 'false')
-			dispatch(cancelConfirmProofAction({ uid, acId, confirm: false }));
-		else dispatch(cancelConfirmProofAction({ uid, acId, confirm }));
-	};
-
-	const handleClickNameActivity = (item, uid) => {
-		setDataModel({ ...item, uid });
-		setVisible(true);
+			return dispatch(updateConfirmProofAction({ uid, acId, confirm: false }));
+		else return dispatch(updateConfirmProofAction({ uid, acId, confirm }));
 	};
 	const handleShowUserDetail = (uid, acId, item) => {
-		console.log(item);
-		if (!item.fullName)
-			dispatch(addUserToActivityAction({ uid, acId })).then((res) => {
-				setDataModelUser(res.payload);
-			});
-		else setDataModelUser(item);
+		setDataModelUser(item);
 		setVisibleUserModel(true);
 	};
 	const expandedRowRender = (activity, index) => {
@@ -100,9 +114,15 @@ export default function AdminManageUserByActivity() {
 							handleShowUserDetail(item.id, activity.id, item)
 						}
 					>
-						{item.displayName}
+						{item.fullName || item.displayName}
 					</Button>
 				),
+			},
+			{
+				title: 'Email',
+				key: 'email',
+				searchFilter: true,
+				dataIndex: 'email',
 			},
 			{
 				title: 'Mssv',
@@ -113,40 +133,32 @@ export default function AdminManageUserByActivity() {
 			{
 				title: 'Trạng thái',
 				key: 'confirm',
-				filters: [
-					{
-						text: 'Đã xác nhận',
-						value: 'true',
-					},
-					{
-						text: 'Chưa xác nhận',
-						value: 'false',
-					},
-					{
-						text: 'MC không hợp lệ',
-						value: 'cancel',
-					},
-					{
-						text: 'Chưa thêm minh chứng',
-						value: 'notproof',
-					},
-				],
+				filters: filterConfirm,
 				onFilter: (value, record) => {
-					if (value === 'notproof') return record.proof === 0;
+					const currentActivity = record.activities[activity.id];
+					if (value === 'notproof')
+						return currentActivity.proof === 0;
 					else if (value === 'cancel')
-						return record.confirm.toString().length > 5;
+						return currentActivity.confirm.toString().length > 5;
 					else if (value === 'false')
-						return record.confirm === false && record.proof !== 0;
-					else if (value === 'true') return record.confirm === true;
+						return (
+							currentActivity.confirm === false &&
+							currentActivity.proof !== 0
+						);
+					else if (value === 'true')
+						return currentActivity.confirm === true;
 				},
-				defaultFilteredValue: ['false', 'cancel'],
-				render: (item) => {
+				defaultFilteredValue: [],
+				render: (user) => {
+					console.log(user);
 					return (
 						<InputSelectWithAddItem
-							defaultValue={item.confirm.toString()}
+							defaultValue={user.activities[
+								activity.id
+							].confirm.toString()}
 							value={option}
 							setValue={(key) =>
-								handleConfirm(item.id, activity.id, key)
+								handleConfirm(user.userId, activity.id, key)
 							}
 							style={{
 								width: '100%',
@@ -163,8 +175,8 @@ export default function AdminManageUserByActivity() {
 				{activity.users ? (
 					<TableCustom
 						columns={columns}
-						dataSource={activity.users.map((c, key) => ({
-							...c,
+						dataSource={activity.users.map((user, key) => ({
+							...user,
 							key,
 						}))}
 						size="small"
@@ -174,19 +186,45 @@ export default function AdminManageUserByActivity() {
 			</>
 		);
 	};
-	const handleConfirmByListStudentCode = (acId, index) => {
+	const handleConfirmByListStudentCode = (activity) => {
 		const listStudentCode = inputStudentCode
 			.split(/[,. -]+/)
 			.filter((c) => c.length === 10 && parseInt(c));
 
-		const listUserId = activity.users
-			.filter((c) => listStudentCode.includes(c.studentCode))
-			.map((c) => c.id);
-		if (listUserId.length)
-			dispatch(
-				comfirmActivityBuListStudentCodeAction({ acId, listUserId })
-			);
-		else message.info('Không có SV có MSSV phù hợp để xác nhận');
+		const listUser = activity.users.filter((c) =>
+			listStudentCode.includes(c.studentCode)
+		);
+		const listUserId = listUser.map((c) => c.id);
+
+		if (!listUserId.length) {
+			message.info('Không có SV có MSSV phù hợp để xác nhận');
+			return;
+		}
+		confirm({
+			title: 'Xác nhận',
+			icon: null,
+			content: (
+				<>
+					<p>{`Có ${listUserId.length} sinh viên sẽ được xác nhận hoạt động này`}</p>
+					{listUser.map((user) => (
+						<Text key={user.userId}>{`${user.studentCode} - ${
+							user.fullName || user.displayName
+						}`}</Text>
+					))}
+				</>
+			),
+			onOk() {
+				return Promise.all(
+					listUserId.map((uid) =>
+						handleConfirm(uid, activity.id, true)
+					)
+				);
+			},
+			onCancel() {
+				console.log('Cancel');
+			},
+		});
+
 		console.log(listUserId);
 	};
 	const columns = [
@@ -216,8 +254,7 @@ export default function AdminManageUserByActivity() {
 				value: c[0],
 				text: c[1],
 			})),
-			onFilter: (value, record) =>
-				record.typeActivity.toString() === value,
+			onFilter: (value, record) => record.typeActivity === value,
 			render: (text) => nameTypeActivity[text],
 		},
 		{
@@ -225,18 +262,6 @@ export default function AdminManageUserByActivity() {
 			key: 'name',
 			dataIndex: 'name',
 			searchFilter: true,
-			render: (item) => {
-				return (
-					<Button
-						type="link"
-						onClick={() =>
-							handleClickNameActivity(item, activity.userId)
-						}
-					>
-						{item.name}
-					</Button>
-				);
-			},
 		},
 		{
 			title: 'Cấp hoạt động',
@@ -264,7 +289,7 @@ export default function AdminManageUserByActivity() {
 
 						<Button
 							onClick={() =>
-								handleConfirmByListStudentCode(record.id, index)
+								handleConfirmByListStudentCode(record)
 							}
 						>
 							Thêm
@@ -273,20 +298,13 @@ export default function AdminManageUserByActivity() {
 				) : null,
 		},
 	];
-	const onExpand = (expanded, record) => {
-		console.log('CLicked expand', { expanded, record });
-		if (!record.users)
-			dispatch(fetchUserByActivityAction(record.id)).then((action) => {
-				record.users = action.payload.respone;
-			});
-	};
 	const loadTable = (list = []) => (
 		<TableCustom
 			pagination={false}
 			columns={columns}
 			expandable={{
 				expandedRowRender,
-				onExpand,
+				rowExpandable: (activity) => activity.users.length,
 			}}
 			dataSource={list}
 			size="small"

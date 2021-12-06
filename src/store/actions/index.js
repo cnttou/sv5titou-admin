@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { addDataApi, deleteDataApi, getSlideShowApi } from '../../api/firestore';
+import { addDataApi, deleteDataApi, getSlideShowApi, getAllDataApi } from '../../api/firestore';
 import firebase from '../../api/firebase';
 const { Timestamp } = firebase.firestore;
 
@@ -7,6 +7,13 @@ const { Timestamp } = firebase.firestore;
 export * from './userAction';
 export * from './activityAction';
 
+export const getAllDataAction = createAsyncThunk(
+	'activity_users/getAll',
+	async () => {
+		let respone = await getAllDataApi();
+		return respone;
+	}
+);
 export const addSlideShowAction = createAsyncThunk(
 	'slideShow/addSlideShow',
 	async ({data, docId}) => {

@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
-	addActivityAction,
+	createOrUpdateActivityAction,
 	deleteActivityAction,
-	fetchAllActivityAction,
+	getAllDataAction,
 } from '../store/actions';
 import Loading from '../components/Loading';
 import { Space, Button, Layout, Switch, Modal, Carousel, Image } from 'antd';
@@ -19,13 +19,12 @@ import {
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { uid as genId } from 'uid';
 
-
 const { Content } = Layout;
 const { confirm } = Modal;
 
 const initActivity = {
 	id: genId(20),
-    image: '',  
+	image: '',
 	active: true,
 	department: null,
 	level: null,
@@ -45,7 +44,7 @@ export default function AdminManageNews() {
 
 	useEffect(() => {
 		if (listNews.length === 0) {
-			dispatch(fetchAllActivityAction());
+			dispatch(getAllDataAction());
 		}
 	}, []);
 
@@ -80,7 +79,7 @@ export default function AdminManageNews() {
 	const handleSwitchActive = (value, data, index) => {
 		// console.log('log ', value, data, index);
 		dispatch(
-			addActivityAction({
+			createOrUpdateActivityAction({
 				data: { ...data, active: value },
 				docId: data.id,
 			})
@@ -213,4 +212,3 @@ export default function AdminManageNews() {
 		</Content>
 	);
 }
-

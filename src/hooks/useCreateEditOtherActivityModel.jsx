@@ -14,12 +14,12 @@ import DatePicker from '../components/DatePicker';
 import { useEffect } from 'react';
 import InputRichText from '../components/InputRichText';
 import { useDispatch } from 'react-redux';
-import { addActivityAction } from '../store/actions';
+import { createOrUpdateActivityAction } from '../store/actions';
 import {
 	nameDepartmentActivity,
 	nameLevelActivity,
 	nameTarget,
-    nameTypeActivity,
+	nameTypeActivity,
 } from '../config';
 
 const { Option } = Select;
@@ -35,7 +35,7 @@ const tailLayout = {
 const initActivity = {
 	active: true,
 	name: '',
-    typeActivity: null,
+	typeActivity: null,
 	summary: '',
 	target: [],
 };
@@ -49,11 +49,13 @@ export const optionTarget = Object.entries(nameTarget).map((c, index) => (
 		{c[1]}
 	</Option>
 ));
-export const optionTypeActivity = Object.entries(nameTypeActivity).map((c, index) => (
-	<Option key={index} value={c[0]} disabled={c[0] === 'register'}>
-		{c[1]}
-	</Option>
-));
+export const optionTypeActivity = Object.entries(nameTypeActivity).map(
+	(c, index) => (
+		<Option key={index} value={c[0]} disabled={c[0] === 'register'}>
+			{c[1]}
+		</Option>
+	)
+);
 
 export const optionDepartment = Object.entries(nameDepartmentActivity).map(
 	(c, index) => (
@@ -85,7 +87,7 @@ function useCreateEditOtherActivityModel({ title, action }) {
 		let docId = dataModel.id || null;
 		console.log(data);
 
-		dispatch(addActivityAction({ data, docId }))
+		dispatch(createOrUpdateActivityAction({ data, docId }))
 			.then(() => {
 				setVisible(false);
 			})

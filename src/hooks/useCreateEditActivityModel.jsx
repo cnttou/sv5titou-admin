@@ -14,7 +14,7 @@ import DatePicker from '../components/DatePicker';
 import { useEffect } from 'react';
 import InputRichText from '../components/InputRichText';
 import { useDispatch } from 'react-redux';
-import { addActivityAction } from '../store/actions';
+import { createOrUpdateActivityAction } from '../store/actions';
 import {
 	nameDepartmentActivity,
 	nameLevelActivity,
@@ -37,7 +37,7 @@ const initActivity = {
 	department: null,
 	level: null,
 	name: '',
-    image: '',
+	image: '',
 	date: null,
 	location: '',
 	summary: '',
@@ -67,7 +67,7 @@ function useCreateEditActivityModel({ title, action }) {
 	const [visible, setVisible] = useState(false);
 	const [dataModel, setDataModel] = useState(initActivity);
 	const [active, setActive] = useState(true);
-    const [loading, setLoading] = useState(false)
+	const [loading, setLoading] = useState(false);
 
 	const dispatch = useDispatch();
 
@@ -82,7 +82,7 @@ function useCreateEditActivityModel({ title, action }) {
 	}, [dataModel]);
 
 	const onFinish = () => {
-        setLoading(true)
+		setLoading(true);
 		const data = Object.assign(form.getFieldsValue());
 		let date = dayjs(form.getFieldsValue().date).format('DD-MM-YYYY');
 		data.date = date;
@@ -90,13 +90,13 @@ function useCreateEditActivityModel({ title, action }) {
 		let docId = dataModel.id || null;
 		console.log(data);
 
-		dispatch(addActivityAction({ data, docId }))
+		dispatch(createOrUpdateActivityAction({ data, docId }))
 			.then(() => {
 				setVisible(false);
-                setLoading(false);
+				setLoading(false);
 			})
 			.catch((err) => {
-                setLoading(false);
+				setLoading(false);
 				message.error('Thêm thất bại, vui lòng thử lại.');
 				console.log(err.message);
 			});
@@ -186,7 +186,7 @@ function useCreateEditActivityModel({ title, action }) {
 						placeholder="URL hình ảnh"
 						addonAfter={
 							<InputUpload
-                                id={dataModel.id}
+								id={dataModel.id}
 								name={'imageUpload'}
 								handleUpload={handleUpload}
 							/>
@@ -240,7 +240,12 @@ function useCreateEditActivityModel({ title, action }) {
 						marginBottom: 0,
 					}}
 				>
-					<Button type="primary" block htmlType="submit" loading={loading}>
+					<Button
+						type="primary"
+						block
+						htmlType="submit"
+						loading={loading}
+					>
 						GỬI
 					</Button>
 				</Form.Item>

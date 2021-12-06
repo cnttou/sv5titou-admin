@@ -20,8 +20,7 @@ export const deleteFileByFullPathApi = (fullPath = '') => {
 
 	return fileProofRef.delete();
 };
-export const deleteFolderImageActivityApi = (acId = '') => {
-	let uid = currentUser().uid;
+export const deleteProofImage = (uid, acId = '') => {
 	let folderProofRef = imagesRef.child(uid).child(acId);
 	return folderProofRef.listAll().then((res) => {
 		let kq = [];
@@ -29,7 +28,9 @@ export const deleteFolderImageActivityApi = (acId = '') => {
 			kq.push(itemRef.delete());
 		});
 		return Promise.all(kq);
-	});
+	}).then(()=>{
+        console.log('delete imgase success')
+    });
 };
 
 export const getFileFromAActivityApi = (acId) => {

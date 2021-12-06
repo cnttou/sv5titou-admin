@@ -1,16 +1,16 @@
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
-	addActivityAction,
+	createOrUpdateActivityAction,
 	deleteActivityAction,
-	fetchAllActivityAction,
+	getAllDataAction,
 } from '../store/actions';
 import Loading from '../components/Loading';
 import { Space, Button, Layout, Switch, Modal } from 'antd';
 import { compareStringName } from '../utils/compareFunction';
 import styles from '../styles/Admin.module.css';
 import TableCustom from '../components/TableCustom';
-import { nameLevelActivity, nameTarget, nameTypeActivity } from '../config';
+import { nameTarget, nameTypeActivity } from '../config';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import useCreateEditOtherActivityModel from '../hooks/useCreateEditOtherActivityModel';
 
@@ -34,7 +34,7 @@ export default function AdminManageOtherActivity() {
 
 	useEffect(() => {
 		if (listNews.length === 0) {
-			dispatch(fetchAllActivityAction(50));
+			dispatch(getAllDataAction());
 		}
 	}, []);
 
@@ -61,15 +61,14 @@ export default function AdminManageOtherActivity() {
 		});
 	};
 
-	const { ui, setVisible, setDataModel } =
-		useCreateEditOtherActivityModel({
-			title: 'Tạo hoặc chỉnh sửa hoạt động',
-		});
+	const { ui, setVisible, setDataModel } = useCreateEditOtherActivityModel({
+		title: 'Tạo hoặc chỉnh sửa hoạt động',
+	});
 
 	const handleSwitchActive = (value, data, index) => {
 		// console.log('log ', value, data, index);
 		dispatch(
-			addActivityAction({
+			createOrUpdateActivityAction({
 				data: { ...data, active: value },
 				docId: data.id,
 			})
@@ -116,7 +115,8 @@ export default function AdminManageOtherActivity() {
 				value: c[0],
 				text: c[1],
 			})),
-			onFilter: (value, record) => record.typeActivity.toString() === value,
+			onFilter: (value, record) =>
+				record.typeActivity.toString() === value,
 			render: (text) => nameTypeActivity[text],
 		},
 		{

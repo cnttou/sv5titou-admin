@@ -7,28 +7,10 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
 	deleteDataApi,
 	addDataApi,
-	removeRegisterActivityApi,
-	getAllActivitiesApi,
-	getUserDetailApi,
-	getAllRegisterUserApi,
 	confirmProofByListStudentCodeApi,
+    deleteActivityOfUserByIdApi,
 } from '../../api/firestore';
 
-export const fetchAllActivityAction = createAsyncThunk(
-	'news/fetchAllNews',
-	async () => {
-		let respone = await getAllActivitiesApi();
-		return respone;
-	}
-);
-
-export const fetchUserByActivityAction = createAsyncThunk(
-	'news/fetchUserByActivity',
-	async (acId) => {
-		let respone = await getAllRegisterUserApi(acId);
-		return { respone, acId };
-	}
-);
 export const comfirmActivityBuListStudentCodeAction = createAsyncThunk(
 	'news/comfirmByListStudentCode',
 	async ({ acId, listUserId }) => {
@@ -37,15 +19,7 @@ export const comfirmActivityBuListStudentCodeAction = createAsyncThunk(
 	}
 );
 
-export const addUserToActivityAction = createAsyncThunk(
-	'news/addUserToNews',
-	async ({ uid, acId }) => {
-		let response = await getUserDetailApi(uid);
-		return { acId, uid, ...response };
-	}
-);
-
-export const addActivityAction = createAsyncThunk(
+export const createOrUpdateActivityAction = createAsyncThunk(
 	'news/addNews',
 	async ({ data, docId }) => {
 		let response = await addDataApi('news', data, docId);
@@ -56,16 +30,10 @@ export const addActivityAction = createAsyncThunk(
 
 export const deleteActivityAction = createAsyncThunk(
 	'news/deleteNews',
-	async (docId) => {
-		let response = await deleteDataApi('news', docId);
+	async (acid) => {
+        deleteActivityOfUserByIdApi(acid);
+		let response = await deleteDataApi('news', acid);
 		return response;
-	}
-);
-
-export const removeRegisteredActivityAction = createAsyncThunk(
-	'registerActivity/removeRegisterActivity',
-	async (acId) => {
-		return await removeRegisterActivityApi(acId);
 	}
 );
 

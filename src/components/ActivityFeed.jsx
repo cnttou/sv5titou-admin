@@ -52,7 +52,6 @@ function ActivityFeed(props) {
 				style={
 					showFull ? { maxHeight: '75vh', overflow: 'scroll' } : null
 				}
-				headStyle={{ background: colorCard(id, confirm) }}
 				title={
 					<>
 						<Title level={5}>{name}</Title>
@@ -72,19 +71,19 @@ function ActivityFeed(props) {
 				}
 				onClick={handleClick}
 			>
-				<p>
+				{date && <p>
 					<strong>Thời gian:</strong> {date}
-				</p>
-				<p>
+				</p>}
+				{location && <p>
 					<strong>Địa điểm:</strong> {location}
-				</p>
+				</p>}
 				{numPeople && (
 					<p>
 						<strong>Số lượng tối đa:</strong> {numPeople}
 					</p>
 				)}
 				<p>
-					<strong>Tiêu chí xét SV5T:</strong> {nameTarget[target]}
+					<strong>Tiêu chí xét SV5T:</strong> {target.map(c=> nameTarget[c]).join(', ')}
 				</p>
 				<div style={{ marginBottom: 0 }}>
 					<strong>Thông tin chi tiết:</strong>
@@ -96,82 +95,12 @@ function ActivityFeed(props) {
 						style={{ height: '100%' }}
 					/>
 				</div>
-				{images && (
-					<div>
-						<strong>Minh chứng đã thêm:</strong>
-						<br />
-						<List
-							itemLayout="horizontal"
-							size="small"
-							bordered
-							dataSource={images}
-							renderItem={(item) =>
-								typeFileimage.includes(
-									item.name.slice(item.name.lastIndexOf('.'))
-								) ? null : (
-									<List.Item>
-										<List.Item.Meta
-											icon={<PaperClipOutlined />}
-											title={
-												<a
-													target="_blank"
-													href={item.url}
-												>
-													{item.name}
-												</a>
-											}
-										/>
-
-										{handleRemoveImage && (
-											<DeleteOutlined
-												style={{ color: 'red' }}
-												onClick={() => {
-													handleRemoveImage(item);
-												}}
-											/>
-										)}
-									</List.Item>
-								)
-							}
-						/>
-					</div>
-				)}
-				<Image.PreviewGroup>
-					{images &&
-						images.map((c, index) =>
-							typeFileimage.includes(
-								c.name.slice(c.name.lastIndexOf('.'))
-							) ? (
-								<div
-									key={index}
-									style={{
-										width: '50%',
-										display: 'inline-block',
-										marginTop: 5,
-										position: 'relative',
-									}}
-								>
-									<Image width={'100%'} src={c.url} />
-									{handleRemoveImage && (
-										<Button
-											style={{
-												position: 'absolute',
-												right: 0,
-												top: 0,
-											}}
-											type="ghost"
-											shape="circle"
-											size="large"
-											icon={<CloseCircleOutlined />}
-											onClick={() => {
-												handleRemoveImage(c);
-											}}
-										/>
-									)}
-								</div>
-							) : null
-						)}
-				</Image.PreviewGroup>
+				{showFull && images && Object.values(images).length ? (
+					<ShowProof
+						images={Object.values(images)}
+						handleRemoveImage={handleRemoveImage}
+					/>
+				) : null}
 				{loading === true && images === undefined ? (
 					<Loading size="default" />
 				) : null}
@@ -179,5 +108,87 @@ function ActivityFeed(props) {
 		</>
 	);
 }
-
+export const ShowProof = ({ images, handleRemoveImage }) => (
+	<>
+		<div>
+			<strong>Minh chứng đã thêm:</strong>
+			<List
+				itemLayout="horizontal"
+				size="small"
+				bordered={false}
+				dataSource={images}
+				renderItem={(item) =>
+					typeFileimage.includes(
+						item.name.slice(item.name.lastIndexOf('.'))
+					) ? null : (
+						<List.Item key={item.name}>
+							<List.Item.Meta
+								icon={<PaperClipOutlined />}
+								title={
+									<a target="_blank" href={item.url}>
+										{item.name}
+									</a>
+								}
+							/>
+							{handleRemoveImage && (
+								<DeleteOutlined
+									style={{ color: 'red' }}
+									onClick={() => {
+										handleRemoveImage(item);
+									}}
+								/>
+							)}
+						</List.Item>
+					)
+				}
+			/>
+		</div>
+		<Image.PreviewGroup>
+			{images.map((image, index) =>
+				typeFileimage.includes(
+					image.name.slice(image.name.lastIndexOf('.'))
+				) ? (
+					<div
+						key={index}
+						style={{
+							width: '50%',
+							display: 'inline-block',
+							marginTop: 5,
+							position: 'relative',
+						}}
+					>
+						<Image
+							style={{
+								objectFit: 'cover',
+								objectPosition: 'center center',
+							}}
+							width={'100%'}
+							height={115}
+							src={image.url}
+						/>
+						<p style={{ textAlign: 'center' }}>
+							{nameTarget[image.target]}
+						</p>
+						{handleRemoveImage && (
+							<Button
+								style={{
+									position: 'absolute',
+									right: 0,
+									top: 0,
+								}}
+								type="ghost"
+								shape="circle"
+								size="large"
+								icon={<CloseCircleOutlined />}
+								onClick={() => {
+									handleRemoveImage(image);
+								}}
+							/>
+						)}
+					</div>
+				) : null
+			)}
+		</Image.PreviewGroup>
+	</>
+);
 export default ActivityFeed;

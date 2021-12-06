@@ -3,14 +3,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import Loading from '../components/Loading';
 import {
 	addUserDetailAction,
-	cancelConfirmProofAction,
-	confirmProofAction,
-	fetchActivityByUserAction,
-	fetchAllActivityAction,
-	fetchUserActivityAction,
-	getImageProofAction,
+	updateConfirmProofAction,
+	getAllDataAction,
 } from '../store/actions';
-import { Table, Layout, Button, Switch, Select, Tag, Space, Modal } from 'antd';
+import { Table, Layout, Button, Switch, Select, Tag, Space, Image } from 'antd';
 import styles from '../styles/Admin.module.css';
 import useModelOnlyShowActivity from '../hooks/useModelOnlyShowActivity';
 import InputSelectWithAddItem from '../components/InputSelectWithAddItem';
@@ -26,7 +22,7 @@ import {
 import TableCustom from '../components/TableCustom';
 import useModelUser from '../hooks/useModelUser';
 import { CSVLink } from 'react-csv';
-import { addActivityDetailByUid } from '../store/reducers/userActivity';
+import { handleSortActivity } from '../utils/compareFunction';
 
 const { Content } = Layout;
 
@@ -73,15 +69,44 @@ const headerCsv = Object.entries(fieldPesonal).map(([k, v]) => ({
 	key: k,
 }));
 
+const initRestExportData = {
+	targetOtherSuccess: [],
+	targetHoiNhap: [],
+	targetKyNang: [],
+	targetNgoaiNgu: [],
+	targetTinhNguyen: [],
+	targetTheLuc: [],
+	otherHocTap: [],
+	requireHocTap: [],
+	otherDaoDuc: [],
+	requireDaoDuc: [],
+};
+const tagRender = (props) => {
+	const { label, value, closable, onClose } = props;
+	const onPreventMouseDown = (event) => {
+		event.preventDefault();
+		event.stopPropagation();
+	};
+
+	return (
+		<Tag
+			color={colorOption[value]}
+			onMouseDown={onPreventMouseDown}
+			closable={closable}
+			onClose={onClose}
+			style={{ marginRight: 3 }}
+		>
+			{label}
+		</Tag>
+	);
+};
 export default function AdminManageUser() {
 	const dispatch = useDispatch();
 	const [csvData, setCsvData] = useState([]);
 	const [listRowChooseData, setListRowChooseData] = useState([]);
-	let {
-		value: listUser,
-		loading,
-		loadingListData,
-	} = useSelector((state) => state.userActivity);
+	let { value: listUser, loading } = useSelector(
+		(state) => state.userActivity
+	);
 	const listNews = useSelector((state) => state.activity.value);
 	let { ui, setVisible, setDataModel } = useModelOnlyShowActivity({
 		title: 'Chi tiết hoạt động.',
@@ -93,109 +118,78 @@ export default function AdminManageUser() {
 	} = useModelUser({
 		title: 'Chi tiết người dùng',
 	});
-	
-    useEffect(async () => {
-		if (listUser.length === 0)
-			dispatch(fetchUserActivityAction()).then(()=>{
-                if (listNews.length === 0) {
-                    dispatch(fetchAllActivityAction()).then((action)=>{
-                        dispatch(addActivityDetailByUid(action.payload));
-                    });
-                } else{
-                    dispatch(addActivityDetailByUid(listNews));
-                }
-            }).catch((error) =>
-				console.log(error.message)
-			);
+
+	useEffect(async () => {
+		if (listUser.length === 0) dispatch(getAllDataAction());
 	}, []);
 
-	const filterctivity = (listActivity = [], condition = {}) => {
-		return listActivity
-			.filter(
-				(activity) =>
-					activity.confirm === true &&
-					activity?.images &&
-					activity.images.length !== 0
-			)
-			.filter((avtivity) => {
-				for (const [key, value] of Object.entries(condition)) {
-					if (key === 'target')
-						return value.every((e) => avtivity.target.includes(e));
-					if (key === 'name')
-						return (
-							avtivity.name
-								.toLowerCase()
-								.indexOf(value.toLowerCase()) !== -1
-						);
-					else if (avtivity[key] !== value) return false;
-				}
-				return true;
-			})
-			.map((c) => c.images.map((d) => d.url).join(', '))
-			.join(', ');
+	const getImageActivity = (activities = [], condition = {}) => {
+		const result = { ...initRestExportData };
+		for (var value of activities) {
+			if (value.confirm === false) continue;
+			else if (value.typeActivity === 'require') {
+				Object.values(value.images).forEach((image) => {
+					if (image.target === 'hoc-tap') {
+						result.requireHocTap.push(image.url);
+					} else if (image.target === 'dao-duc') {
+						result.requireDaoDuc.push(image.url);
+					}
+				});
+			} else if (value.typeActivity === 'other') {
+				Object.values(value.images).forEach((image) => {
+					if (image.target === 'hoc-tap') {
+						result.otherHocTap.push(image.url);
+					} else if (image.target === 'dao-duc') {
+						result.otherDaoDuc.push(image.url);
+					}
+				});
+			} else {
+				Object.values(value.images).forEach((image) => {
+					if (image.target === 'tieu-bieu-khac') {
+						result.targetOtherSuccess.push(image.url);
+					} else if (image.target === 'hoi-nhap') {
+						result.targetHoiNhap.push(image.url);
+					} else if (image.target === 'ky-nang') {
+						result.targetKyNang.push(image.url);
+					} else if (image.target === 've-ngoai-ngu') {
+						result.targetNgoaiNgu.push(image.url);
+					} else if (image.target === 'tinh-nguyen') {
+						result.targetTinhNguyen.push(image.url);
+					} else if (image.target === 'the-luc') {
+						result.targetTheLuc.push(image.url);
+					}
+				});
+			}
+		}
+		return result;
 	};
 	useEffect(() => {
 		if (loading === 0 && listRowChooseData.length) {
-			setCsvData(
-				listUser
-					.filter((e) => listRowChooseData.includes(e.userId))
-					.map((c) => ({
-						...c,
-						sex: nameSex[c.sex],
-						targetSuccess: c?.targetSuccess?.length
-							? c.targetSuccess
-									.map((c) => nameTarget[c])
-									.join(', ')
-							: '',
-						majors: nameMajors[c.majors],
-						department: nameDepartmentActivity[c.department],
-						levelReview: nameLevelRegister[c.levelReview],
-						targetOtherSuccess: filterctivity(c.listData, {
-							target: ['tieu-bieu-khac'],
-						}),
-						targetHoiNhap: filterctivity(c.listData, {
-							target: ['hoi-nhap'],
-						}),
-						targetKyNang: filterctivity(c.listData, {
-							target: ['ve-ky-nang'],
-						}),
-						targetNgoaiNgu: filterctivity(c.listData, {
-							target: ['ve-ngoai-ngu'],
-						}),
-						targetTinhNguyen: filterctivity(c.listData, {
-							target: ['tinh-nguyen'],
-						}),
-						targetTheLuc: filterctivity(c.listData, {
-							target: ['the-luc'],
-						}),
-						otherHocTap: filterctivity(c.listData, {
-							target: ['hoc-tap'],
-							typeActivity: 'other',
-						}),
-						requireHocTap: filterctivity(c.listData, {
-							target: ['hoc-tap'],
-							typeActivity: 'require',
-						}),
-						otherDaoDuc: filterctivity(c.listData, {
-							target: ['dao-duc'],
-							typeActivity: 'other',
-						}),
-						requireDaoDuc: filterctivity(c.listData, {
-							target: ['dao-duc'],
-							typeActivity: 'require',
-						}),
-					}))
-			);
+			const dataExport = listRowChooseData.map((user) => ({
+				...user,
+				sex: nameSex[user.sex],
+				targetSuccess: user?.targetSuccess?.length
+					? user.targetSuccess.map((c) => nameTarget[c]).join(', ')
+					: '',
+				majors: nameMajors[user.majors],
+				department: nameDepartmentActivity[user.department],
+				levelReview: nameLevelRegister[user.levelReview],
+				...getImageActivity(Object.values(user.activities)),
+			}));
+			console.log('data export: ', dataExport);
+			setCsvData(dataExport);
 		} else {
 			setCsvData([]);
 		}
 	}, [loading, listUser, listRowChooseData]);
+
 	const handleConfirm = (uid, acId, confirm) => {
 		console.log('handle confirm: ', { uid, acId, confirm });
-		if (confirm === 'true') dispatch(confirmProofAction({ uid, acId }));
+		if (confirm === 'true')
+			dispatch(updateConfirmProofAction({ uid, acId, confirm: true }));
 		else if (confirm === 'false')
-			dispatch(cancelConfirmProofAction({ uid, acId, confirm: false }));
-		else dispatch(cancelConfirmProofAction({ uid, acId, confirm }));
+			dispatch(updateConfirmProofAction({ uid, acId, confirm: false }));
+		else dispatch(updateConfirmProofAction({ uid, acId, confirm }));
 	};
 	const handleClickNameActivity = (item, uid) => {
 		setDataModel({ ...item, uid });
@@ -210,7 +204,7 @@ export default function AdminManageUser() {
 		dispatch(
 			addUserDetailAction({
 				uid: item.userId,
-				data: { targetSuccess: value },
+				targetSuccess: value,
 			})
 		).then((res) => {
 			console.log('them thanh cong');
@@ -264,7 +258,32 @@ export default function AdminManageUser() {
 				render: (item) =>
 					item.target.map((c) => nameTarget[c]).join(', '),
 			},
-			{ title: 'Ngày diễn ra', dataIndex: 'date', key: 'date' },
+			{
+				title: 'Minh chứng',
+				key: 'proof',
+				render: (item) => (
+					<Space
+						style={{ maxWidth: 350, overflowX: 'auto' }}
+						direction="horizontal"
+					>
+						{Object.values(item.images).map((image) => (
+							<div key={image.name}>
+								<Image
+									height={100}
+									style={{ objectFit: 'cover' }}
+									alt={image.name}
+									src={image.url}
+								/>
+								{item.target.length > 1 && (
+									<p style={{ textAlign: 'center' }}>
+										{nameTarget[image.target]}
+									</p>
+								)}
+							</div>
+						))}
+					</Space>
+				),
+			},
 			{
 				title: 'Trạng thái',
 				key: 'confirm',
@@ -294,7 +313,7 @@ export default function AdminManageUser() {
 						return record.confirm === false && record.proof !== 0;
 					else if (value === 'true') return record.confirm === true;
 				},
-				defaultFilteredValue: ['false', 'cancel'],
+				defaultFilteredValue: [],
 				render: (item) => {
 					return (
 						<InputSelectWithAddItem
@@ -315,11 +334,16 @@ export default function AdminManageUser() {
 
 		return (
 			<>
-				{user.listData && (
+				{user.activities && (
 					<Table
 						columns={columns}
 						dataSource={
-							user.listData.map((c, key) => ({ ...c, key })) || []
+							Object.values(user.activities)
+								.sort(handleSortActivity)
+								.map((c, key) => ({
+									...c,
+									key,
+								})) || []
 						}
 						size="small"
 						pagination={false}
@@ -328,46 +352,10 @@ export default function AdminManageUser() {
 			</>
 		);
 	};
-	const tagRender = (props) => {
-		const { label, value, closable, onClose } = props;
-		const onPreventMouseDown = (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-		};
 
-		return (
-			<Tag
-				color={colorOption[value]}
-				onMouseDown={onPreventMouseDown}
-				closable={closable}
-				onClose={onClose}
-				style={{ marginRight: 3 }}
-			>
-				{label}
-			</Tag>
-		);
-	};
 	const handleSelectRowTabel = (record, selected, selectedRows, e) => {
 		console.log('selectedRowss', selectedRows);
-		let listUserId = [];
-		selectedRows.forEach((student) => {
-			student.listData.forEach((activity) => {
-				if (activity.confirm && !activity.images)
-					dispatch(
-						getImageProofAction({
-							uid: student.userId,
-							acId: activity.id,
-						})
-					);
-			});
-			listUserId.push(student.userId);
-		});
-		setListRowChooseData(listUserId);
-	};
-	const onExpand = (expanded, record) => {
-		console.log('CLicked expand', { expanded, record });
-		if (!record.listData)
-			dispatch(fetchActivityByUserAction(record.userId));
+		setListRowChooseData(selectedRows);
 	};
 	const columns = [
 		{
@@ -405,6 +393,16 @@ export default function AdminManageUser() {
 			searchFilter: true,
 		},
 		{
+			title: 'Điểm RL',
+			key: 'pointTraining',
+			dataIndex: 'pointTraining',
+		},
+		{
+			title: 'Điểm HT',
+			key: 'gpa',
+			dataIndex: 'gpa',
+		},
+		{
 			title: 'Đã hoàn thành',
 			key: 'action',
 			filters: options.map((c) => ({
@@ -438,8 +436,10 @@ export default function AdminManageUser() {
 			pagination={false}
 			columns={columns}
 			expandable={{
-				onExpand,
 				expandedRowRender,
+				rowExpandable: (record) =>
+					Object.keys(record.activities).length,
+				expandRowByClick: true,
 			}}
 			rowSelection={{
 				onSelect: handleSelectRowTabel,
@@ -447,22 +447,21 @@ export default function AdminManageUser() {
 			}}
 			dataSource={listUser}
 			size="small"
+			sticky={true}
 		/>
 	);
 	return (
 		<Content className={styles.contentAdminManageUser}>
-			<Space direction="horizontal">
-				{loading === 0 && csvData.length !== 0 && (
-					<CSVLink
-						filename={'Export-SV5T.csv'}
-						data={csvData}
-						target="_blank"
-						headers={headerCsv}
-					>
-						Xuất dữ liệu đã chọn
-					</CSVLink>
-				)}
-			</Space>
+			{loading === 0 && csvData.length !== 0 && (
+				<CSVLink
+					filename={'Export-SV5T.csv'}
+					data={csvData}
+					target="_blank"
+					headers={headerCsv}
+				>
+					Xuất dữ liệu đã chọn
+				</CSVLink>
+			)}
 			{listUser?.length ? (
 				loadTable(listUser.map((c, key) => ({ ...c, key })))
 			) : (

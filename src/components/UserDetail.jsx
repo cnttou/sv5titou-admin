@@ -7,7 +7,7 @@ const { Text, Title } = Typography;
 export const typeFileimage = ['.jpeg', '.jpg', '.png'];
 
 function UserDetail(props) {
-	const { fullName, studentCode, listData, ...rest } = props;
+	const { fullName, displayName, studentCode, listData, ...rest } = props;
 	return (
 		<>
 			<Card
@@ -16,7 +16,7 @@ function UserDetail(props) {
 				className={styles.card}
 				style={{ maxHeight: '75vh', overflow: 'scroll' }}
 				title={
-					<>
+					fullName && <>
 						<Title level={5}>{fullName}</Title>
 						<Text type="secondary">{studentCode}</Text>
 					</>
@@ -28,7 +28,7 @@ function UserDetail(props) {
 							<strong>{v.label}: </strong>
 							{null}
 							{v.parse
-								? typeof rest[k] !== "string"
+								? typeof rest[k] !== 'string'
 									? rest[k].map((c) => v.parse(c)).join(', ')
 									: v.parse(rest[k])
 								: rest[k]}
