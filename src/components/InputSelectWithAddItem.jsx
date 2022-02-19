@@ -8,7 +8,7 @@ let index = 0;
 
 export default class InputSelectWithAddItem extends React.Component {
 	state = {
-		items: this.props.value || [''],
+		items: this.props.option || [''],
 		name: '',
 	};
 
@@ -37,12 +37,11 @@ export default class InputSelectWithAddItem extends React.Component {
 
 	render() {
 		const { items, name } = this.state;
-		const { value, setValue, ...rest } = this.props;
+		const { option, setValue, ...rest } = this.props;
 		return (
 			<Select
 				{...rest}
 				onChange={setValue}
-				// dropdownStyle={{backgroundColor: "red"}}
 				dropdownRender={(menu) => (
 					<div>
 						{menu}

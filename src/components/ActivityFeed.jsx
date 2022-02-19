@@ -15,6 +15,9 @@ const { Text, Title } = Typography;
 
 export const typeFileimage = ['.jpeg', '.jpg', '.png'];
 
+export const checkFileImage = (fileName) => {
+	return typeFileimage.includes(fileName.slice(fileName.lastIndexOf('.')));
+};
 function ActivityFeed(props) {
 	const {
 		loading,
@@ -71,19 +74,24 @@ function ActivityFeed(props) {
 				}
 				onClick={handleClick}
 			>
-				{date && <p>
-					<strong>Thời gian:</strong> {date}
-				</p>}
-				{location && <p>
-					<strong>Địa điểm:</strong> {location}
-				</p>}
+				{date && (
+					<p>
+						<strong>Thời gian:</strong> {date}
+					</p>
+				)}
+				{location && (
+					<p>
+						<strong>Địa điểm:</strong> {location}
+					</p>
+				)}
 				{numPeople && (
 					<p>
 						<strong>Số lượng tối đa:</strong> {numPeople}
 					</p>
 				)}
 				<p>
-					<strong>Tiêu chí xét SV5T:</strong> {target.map(c=> nameTarget[c]).join(', ')}
+					<strong>Tiêu chí xét SV5T:</strong>{' '}
+					{target.map((c) => nameTarget[c]).join(', ')}
 				</p>
 				<div style={{ marginBottom: 0 }}>
 					<strong>Thông tin chi tiết:</strong>

@@ -1,28 +1,45 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+  	
+    function isAdmin(){
+    	return request.auth != null && request.auth.uid == 'bqiHeUsh3ASyhQshMsVpbdfwx3o1';
+    }
+    function isUser(userId){
+    	return request.auth != null && request.auth.uid == userId;
+    }
+    function isUpdateFullName(){
+    	return request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['studentCode', 'fullName', 'targetSuccess', 'levelReview']);
+    }
+    //add data at the first time
+    function isInitData(){
+    	return request.resource.data.diff(resource.data).addedKeys().size() != 0;
+    }
+		function isUpdateConfirmTrue(){
+    	let acid = request.resource.data.activities.diff(resource.data.activities).affectedKeys();
+    	return acid.size() == 1 && resource.data.activities.get(acid[0], '').confirm == true;
+    }
+    function emptyTargetSuccess(){
+        return request.resource.data.targetSuccess == [];
+    }
+    
     match /news/{idDoc} {
       allow read;
-      allow write: if request.auth.uid == 'bqiHeUsh3ASyhQshMsVpbdfwx3o1';
-
-      match /users/{userId} {
-    	allow read, update, write: if request.auth != null && request.auth.uid == userId;
-      	allow read, write, update: if request.auth.uid == 'bqiHeUsh3ASyhQshMsVpbdfwx3o1';
-      }
+      allow write: if isAdmin();
     }
     match /slide_show/{docId} {
-      allow read;
-      allow write, update, delete: if request.auth.uid == 'bqiHeUsh3ASyhQshMsVpbdfwx3o1';
+      allow list;
+      allow read, write: if isAdmin();
     }
     match /register_activity/{userId} {
-      allow read, write, update: if request.auth != null && request.auth.uid == userId;
-      allow read, write: if request.auth.uid == 'bqiHeUsh3ASyhQshMsVpbdfwx3o1';
-      
-      match /activities/{acId} {
-    		allow read, update, delete: if request.auth != null && request.auth.uid == userId;
-      	allow read, write: if request.auth != null;
-      	allow read, write: if request.auth.uid == 'bqiHeUsh3ASyhQshMsVpbdfwx3o1';
-    	}
+    	allow create: if isUser(userId) && request.resource.data.targetSuccess == [];
+      //only update when user is login, targetSuccess = [] or studentCode and fullName not before, 
+      //or not update confirm = true
+      allow update: if isUser(userId) && !isUpdateConfirmTrue()
+      	&& (emptyTargetSuccess() || !emptyTargetSuccess() && !isUpdateFullName() || isInitData())
+      allow get: if isUser(userId);
+      allow read, write: if isAdmin();
     }
   }
 }

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { deleteSlideShowAction, fetchSlideShowAction } from '../store/actions';
 import Loading from '../components/Loading';
-import { Space, Button, Layout, Modal, Typography } from 'antd';
+import { Space, Button, Layout, Modal, Typography, Image, Alert } from 'antd';
 import styles from '../styles/Admin.module.css';
 import TableCustom from '../components/TableCustom';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
@@ -21,10 +21,9 @@ const initActivity = {
 };
 
 export default function AdminManageSlide() {
-	const {
-		value: listSlideShow,
-		loading,
-	} = useSelector((state) => state.slideShow);
+	const { value: listSlideShow, loading } = useSelector(
+		(state) => state.slideShow
+	);
 
 	const dispatch = useDispatch();
 
@@ -81,7 +80,15 @@ export default function AdminManageSlide() {
 			title: 'Hình ảnh',
 			dataIndex: 'image',
 			key: 'image',
-			render: (text) => <img width={50} src={text} alt={text} />,
+			render: (text) => (
+				<Image
+					height={80}
+					width={130}
+					style={{ objectFit: 'cover' }}
+					alt={text}
+					src={text}
+				/>
+			),
 		},
 		{
 			title: 'Thao tác',
@@ -91,10 +98,7 @@ export default function AdminManageSlide() {
 					<Button onClick={() => handleShowModelToEdit(record)}>
 						Sửa
 					</Button>
-					<Button
-						danger
-						onClick={() => handleDelete(record)}
-					>
+					<Button danger onClick={() => handleDelete(record)}>
 						Xóa
 					</Button>
 				</Space>
@@ -117,6 +121,7 @@ export default function AdminManageSlide() {
 	);
 	return (
 		<Content className={styles.content}>
+			<Alert message="Vui lòng tải ảnh lên theo tỉ lệ 4:3 và không copy link ảnh từ Facebook" type="warning" />
 			{loading === 0 ? loadTable() : <Loading />}
 			{ui()}
 		</Content>

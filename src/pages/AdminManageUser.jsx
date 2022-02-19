@@ -23,6 +23,8 @@ import TableCustom from '../components/TableCustom';
 import useModelUser from '../hooks/useModelUser';
 import { CSVLink } from 'react-csv';
 import { handleSortActivity } from '../utils/compareFunction';
+import { checkFileImage } from '../components/ActivityFeed';
+import { PaperClipOutlined } from '@ant-design/icons';
 
 const { Content } = Layout;
 
@@ -100,6 +102,7 @@ const tagRender = (props) => {
 		</Tag>
 	);
 };
+
 export default function AdminManageUser() {
 	const dispatch = useDispatch();
 	const [csvData, setCsvData] = useState([]);
@@ -203,7 +206,7 @@ export default function AdminManageUser() {
 	const handleChangeTargetSuccess = (value, item) => {
 		dispatch(
 			addUserDetailAction({
-				uid: item.userId,
+				uid: item.uid,
 				targetSuccess: value,
 			})
 		).then((res) => {
@@ -238,7 +241,7 @@ export default function AdminManageUser() {
 						<Button
 							type="link"
 							onClick={() =>
-								handleClickNameActivity(item, user.userId)
+								handleClickNameActivity(item, user.uid)
 							}
 						>
 							{item.name}
@@ -266,17 +269,34 @@ export default function AdminManageUser() {
 						style={{ maxWidth: 350, overflowX: 'auto' }}
 						direction="horizontal"
 					>
-						{Object.values(item.images).map((image) => (
-							<div key={image.name}>
-								<Image
-									height={100}
-									style={{ objectFit: 'cover' }}
-									alt={image.name}
-									src={image.url}
-								/>
+						{Object.values(item.images).map((file) => (
+							<div key={file.name}>
+								{checkFileImage(file.name) ? (
+									<>
+										<Image
+											height={80}
+											width={130}
+											style={{ objectFit: 'cover' }}
+											alt={file.name}
+											src={file.url}
+										/>
+									</>
+								) : (
+									<div key={file.name}>
+										<Button
+											icon={<PaperClipOutlined />}
+											type="link"
+											block
+										>
+											<a target="_blank" href={file.url}>
+												{`${file.name}`}
+											</a>
+										</Button>
+									</div>
+								)}
 								{item.target.length > 1 && (
-									<p style={{ textAlign: 'center' }}>
-										{nameTarget[image.target]}
+									<p style={{ textAlign: 'center', margin: 0 }}>
+										{nameTarget[file.target]}
 									</p>
 								)}
 							</div>
@@ -317,10 +337,10 @@ export default function AdminManageUser() {
 				render: (item) => {
 					return (
 						<InputSelectWithAddItem
-							defaultValue={item.confirm.toString()}
-							value={option}
+							value={item.confirm.toString()}
+							option={option}
 							setValue={(key) =>
-								handleConfirm(user.userId, item.id, key)
+								handleConfirm(user.uid, item.id, key)
 							}
 							style={{
 								width: '100%',
@@ -336,6 +356,7 @@ export default function AdminManageUser() {
 			<>
 				{user.activities && (
 					<Table
+						style={{ backgroundColor: '#69c0ff' }}
 						columns={columns}
 						dataSource={
 							Object.values(user.activities)
@@ -439,7 +460,6 @@ export default function AdminManageUser() {
 				expandedRowRender,
 				rowExpandable: (record) =>
 					Object.keys(record.activities).length,
-				expandRowByClick: true,
 			}}
 			rowSelection={{
 				onSelect: handleSelectRowTabel,

@@ -1,11 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Loading from '../components/Loading';
-import {
-	comfirmActivityBuListStudentCodeAction,
-	updateConfirmProofAction,
-	getAllDataAction,
-} from '../store/actions';
+import { updateConfirmProofAction, getAllDataAction } from '../store/actions';
 import {
 	Layout,
 	Button,
@@ -14,14 +10,17 @@ import {
 	Input,
 	message,
 	Modal,
+	Image,
 	Typography,
 } from 'antd';
 import styles from '../styles/Admin.module.css';
-import useModelOnlyShowActivity from '../hooks/useModelOnlyShowActivity';
 import InputSelectWithAddItem from '../components/InputSelectWithAddItem';
 import { nameLevelActivity, nameTarget, nameTypeActivity } from '../config';
 import TableCustom from '../components/TableCustom';
 import useModelUser from '../hooks/useModelUser';
+import { checkFileImage } from '../components/ActivityFeed';
+import { PaperClipOutlined } from '@ant-design/icons';
+import { handleSortActivity } from '../utils/compareFunction';
 
 const { Text } = Typography;
 const { Content } = Layout;
@@ -74,11 +73,10 @@ export default function AdminManageUserByActivity() {
 	const [inputStudentCode, setInputStudentCode] = useState('');
 	const dispatch = useDispatch();
 	const listNews = useSelector((s) =>
-		s.activity.value.map((c, key) => ({ ...c, key }))
+		s.activity.value
+			.map((c, key) => ({ ...c, key }))
+			.sort(handleSortActivity)
 	);
-	let { ui, setVisible, setDataModel } = useModelOnlyShowActivity({
-		title: 'Chi tiết hoạt động.',
-	});
 	let {
 		ui: uiUserDetail,
 		setVisible: setVisibleUserModel,
@@ -93,9 +91,13 @@ export default function AdminManageUserByActivity() {
 	const handleConfirm = (uid, acId, confirm) => {
 		console.log('handle confirm: ', { uid, acId, confirm });
 		if (confirm === 'true')
-			return dispatch(updateConfirmProofAction({ uid, acId, confirm: true }));
+			return dispatch(
+				updateConfirmProofAction({ uid, acId, confirm: true })
+			);
 		else if (confirm === 'false')
-			return dispatch(updateConfirmProofAction({ uid, acId, confirm: false }));
+			return dispatch(
+				updateConfirmProofAction({ uid, acId, confirm: false })
+			);
 		else return dispatch(updateConfirmProofAction({ uid, acId, confirm }));
 	};
 	const handleShowUserDetail = (uid, acId, item) => {
@@ -131,6 +133,60 @@ export default function AdminManageUserByActivity() {
 				dataIndex: 'studentCode',
 			},
 			{
+				title: 'Minh chứng',
+				key: 'proof',
+				render: (user) => (
+					<Space
+						style={{ maxWidth: 350, overflowX: 'auto' }}
+						direction="horizontal"
+					>
+						{Object.values(user.activities[activity.id]?.images).map(
+							(file) => (
+								<div key={file.name}>
+									{checkFileImage(file.name) ? (
+										<>
+											<Image
+												height={80}
+												width={130}
+												style={{ objectFit: 'cover' }}
+												alt={file.name}
+												src={file.url}
+											/>
+										</>
+									) : (
+										<div key={file.name}>
+											<Button
+												icon={<PaperClipOutlined />}
+												type="link"
+												block
+											>
+												<a
+													target="_blank"
+													href={file.url}
+												>
+													{`${file.name}`}
+												</a>
+											</Button>
+										</div>
+									)}
+									{user.activities[activity.id].target
+										.length > 1 && (
+										<p
+											style={{
+												textAlign: 'center',
+												margin: 0,
+											}}
+										>
+											{nameTarget[file.target]}
+										</p>
+									)}
+								</div>
+							)
+						)}
+					</Space>
+				),
+			},
+			{
 				title: 'Trạng thái',
 				key: 'confirm',
 				filters: filterConfirm,
@@ -150,15 +206,14 @@ export default function AdminManageUserByActivity() {
 				},
 				defaultFilteredValue: [],
 				render: (user) => {
-					console.log(user);
 					return (
 						<InputSelectWithAddItem
-							defaultValue={user.activities[
+							value={user.activities[
 								activity.id
 							].confirm.toString()}
-							value={option}
+							option={option}
 							setValue={(key) =>
-								handleConfirm(user.userId, activity.id, key)
+								handleConfirm(user.uid, activity.id, key)
 							}
 							style={{
 								width: '100%',
@@ -191,8 +246,11 @@ export default function AdminManageUserByActivity() {
 			.split(/[,. -]+/)
 			.filter((c) => c.length === 10 && parseInt(c));
 
-		const listUser = activity.users.filter((c) =>
-			listStudentCode.includes(c.studentCode)
+		const listUser = activity.users.filter(
+			(user) =>
+				listStudentCode.includes(user.studentCode) &&
+				user.activities[activity.id].proof >= 1 &&
+				user.activities[activity.id].confirm === false
 		);
 		const listUserId = listUser.map((c) => c.id);
 
@@ -207,7 +265,7 @@ export default function AdminManageUserByActivity() {
 				<>
 					<p>{`Có ${listUserId.length} sinh viên sẽ được xác nhận hoạt động này`}</p>
 					{listUser.map((user) => (
-						<Text key={user.userId}>{`${user.studentCode} - ${
+						<Text key={user.uid}>{`${user.studentCode} - ${
 							user.fullName || user.displayName
 						}`}</Text>
 					))}
@@ -266,20 +324,30 @@ export default function AdminManageUserByActivity() {
 		{
 			title: 'Cấp hoạt động',
 			dataIndex: 'level',
+			filters: Object.entries(nameLevelActivity).map((c) => ({
+				text: c[1],
+				value: c[0],
+			})),
+			onFilter: (value, record) => record.level === value,
 			key: 'level',
 			render: (text) => nameLevelActivity[text],
 		},
 		{
 			title: 'Tiêu chí',
 			key: 'target',
-			render: (item) => item.target.map((c) => nameTarget[c]).join(', '),
+			filters: Object.entries(nameTarget).map((c) => ({
+				value: c[0],
+				text: c[1],
+			})),
+			onFilter: (value, record) => record.target.includes(value),
+			render: (text) => text.target.map((c) => nameTarget[c]).join(', '),
 		},
 		{ title: 'Ngày diễn ra', dataIndex: 'date', key: 'date' },
 		{
 			title: 'Xác nhận bằng danh sách MSSV',
 			key: 'action',
-			render: (text, record, index) =>
-				listNews[index]?.users?.length ? (
+			render: (text, record) =>
+				record?.users?.length ? (
 					<Space direction="horizontal">
 						<Input
 							onChange={(e) =>
@@ -313,7 +381,6 @@ export default function AdminManageUserByActivity() {
 	return (
 		<Content className={styles.contentAdminManageUser}>
 			{listNews?.length ? loadTable(listNews) : <Loading />}
-			{ui()}
 			{uiUserDetail()}
 		</Content>
 	);

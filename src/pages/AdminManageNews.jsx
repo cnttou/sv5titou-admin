@@ -97,6 +97,7 @@ export default function AdminManageNews() {
 			title: 'Trạng thái',
 			dataIndex: 'active',
 			key: 'active',
+			width: 120,
 			filters: [
 				{
 					text: 'Chưa kích hoạt',
@@ -119,9 +120,22 @@ export default function AdminManageNews() {
 			),
 		},
 		{
+			title: 'Cấp hoạt động',
+			dataIndex: 'level',
+			key: 'level',
+			width: 150,
+			filters: Object.entries(nameLevelActivity).map((c) => ({
+				value: c[0],
+				text: c[1],
+			})),
+			onFilter: (value, record) => record.level === value,
+			render: (text) => nameLevelActivity[text],
+		},
+		{
 			title: 'Khoa',
 			dataIndex: 'department',
 			key: 'department',
+			width: 200,
 			filters: Object.entries(nameDepartmentActivity).map((c) => ({
 				value: c[0],
 				text: c[1],
@@ -148,20 +162,10 @@ export default function AdminManageNews() {
 			render: (text) => text.map((c) => nameTarget[c]).join(', '),
 		},
 		{
-			title: 'Cấp hoạt động',
-			dataIndex: 'level',
-			key: 'level',
-			filters: Object.entries(nameLevelActivity).map((c) => ({
-				value: c[0],
-				text: c[1],
-			})),
-			onFilter: (value, record) => record.level === value,
-			render: (text) => nameLevelActivity[text],
-		},
-		{
 			title: 'Thời gian',
 			dataIndex: 'date',
 			key: 'date',
+			width: 150,
 			dateBeweenFilter: true,
 			defaultSortOrder: 'descend',
 			sorter: (a, b) => compareStringDate(a, b),
@@ -170,15 +174,19 @@ export default function AdminManageNews() {
 			title: 'Địa điểm',
 			dataIndex: 'location',
 			key: 'location',
+			ellipsis: true,
+			width: 180,
 		},
 		{
 			title: 'Số người',
 			dataIndex: 'numPeople',
 			key: 'numPeople',
+			width: 100,
 		},
 		{
 			title: 'Thao tác',
 			key: 'action',
+			width: 160,
 			render: (text, record) => (
 				<Space size="middle">
 					<Button onClick={() => handleShowModelToEdit(record)}>

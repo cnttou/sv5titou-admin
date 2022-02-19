@@ -32,14 +32,14 @@ export const userActivity = createSlice({
 		builder.addCase(addUserDetailAction.fulfilled, (state, action) => {
 			const { uid, targetSuccess } = action.payload;
 			state.value = state.value.map((user) =>
-				user.userId === uid ? { ...user, targetSuccess } : user
+				user.uid === uid ? { ...user, targetSuccess } : user
 			);
 		});
 		builder
 			.addCase(getImageProofAction.fulfilled, (state, action) => {
 				const { uid, acId, images } = action.payload;
 				state.value = state.value.map((c) => {
-					if (c.userId === uid) {
+					if (c.uid === uid) {
 						c.listData = c.listData.map((d) =>
 							d.id === acId ? { ...d, images } : d
 						);
@@ -59,7 +59,7 @@ export const userActivity = createSlice({
 				const { uid, acId, confirm } = action.payload;
 
 				state.value = state.value.map((user) => {
-					if (user.userId === uid)
+					if (user.uid === uid)
 						user.activities[acId].confirm = confirm;
 					return user;
 				});
@@ -75,11 +75,11 @@ export const userActivity = createSlice({
 		builder.addCase(
 			createOrUpdateActivityAction.fulfilled,
 			(state, action) => {
-				const { acId } = action.payload;
+				const { id } = action.payload;
 				state.value = state.value.map((user) => {
-					if (user.userId === uid && user.activities[acId])
-						user.activities[acId] = {
-							...user.activities[acId],
+					if (user.activities[id])
+						user.activities[id] = {
+							...user.activities[id],
 							...action.payload,
 						};
 					return user;

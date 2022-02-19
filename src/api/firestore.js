@@ -52,16 +52,6 @@ export const addUserDetailApi = (uid, targetSuccess) => {
 		.then(() => ({ targetSuccess, uid }))
 		.catch((err) => console.log(err.message));
 };
-export const confirmProofByListStudentCodeApi = (acId, listUserId) => {
-	return Promise.all(listUserId.map((id) => confirmProofApi(id, acId)))
-		.then((listRes) => {
-			console.log('listRes', listRes);
-			return { listUserId, acId, confirm: true };
-		})
-		.catch((error) => {
-			console.log(error.message);
-		});
-};
 export const confirmProofApi = (uid, acId, confirm) => {
 	return db
 		.collection('register_activity')

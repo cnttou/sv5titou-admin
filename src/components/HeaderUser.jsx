@@ -27,9 +27,9 @@ export default function HeaderUser() {
 		<Header className={styles.header} style={{ background: 'white' }}>
 			<div className={styles.wrapperLogo}>
 				<Image
-					width={75}
+					width={60}
 					preview={false}
-					src="/logo.png"
+					src="/logo-dhm.png"
 					alt="logo menu bar"
 					className={styles.logo}
 				/>

@@ -2,7 +2,6 @@ import { createSlice } from '@reduxjs/toolkit';
 
 import {
 	createOrUpdateActivityAction,
-	comfirmActivityBuListStudentCodeAction,
 	updateConfirmProofAction,
 	deleteActivityAction,
 	getAllDataAction,
@@ -35,7 +34,7 @@ export const activity = createSlice({
 				state.value = state.value.map((activity) => {
 					if (activity.id === acId)
 						activity.users = activity.users.map((user) => {
-							if (user.userId === uid)
+							if (user.uid === uid)
 								user.activities[acId].confirm = confirm;
 							return user;
 						});
@@ -51,25 +50,6 @@ export const activity = createSlice({
 			.addCase(updateConfirmProofAction.rejected, (state) => {
 				state.loading = state.loading - 1;
 			});
-		builder.addCase(
-			comfirmActivityBuListStudentCodeAction.fulfilled,
-			(state, action) => {
-				const { listUserId, acId, confirm } = action.payload;
-
-				state.value = state.value.map((c) =>
-					c.id == acId
-						? {
-								...c,
-								users: c.users.map((d) =>
-									listUserId.includes(d.id)
-										? { ...d, confirm }
-										: d
-								),
-						  }
-						: c
-				);
-			}
-		);
 		builder.addCase(deleteActivityAction.fulfilled, (state, action) => {
 			state.value = state.value.filter((c) => c.id != action.payload);
 		});
@@ -86,7 +66,7 @@ export const activity = createSlice({
 						isExist = true;
 					}
 				});
-				if (isExist === false) state.value.push(action.payload);
+				if (isExist === false) state.value.push({...action.payload, users: []});
 			}
 		);
 		builder.addCase(logoutAction, (state) => {

@@ -200,6 +200,8 @@ class TableCustom extends React.Component {
 		});
 		return (
 			<Table
+				style={{ backgroundColor: '#69c0ff' }}
+				bordered
 				columns={columnsCus}
 				dataSource={dataSource.map((c, key) => ({ ...c, key }))}
 				{...rest}

@@ -7,17 +7,9 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
 	deleteDataApi,
 	addDataApi,
-	confirmProofByListStudentCodeApi,
     deleteActivityOfUserByIdApi,
 } from '../../api/firestore';
 
-export const comfirmActivityBuListStudentCodeAction = createAsyncThunk(
-	'news/comfirmByListStudentCode',
-	async ({ acId, listUserId }) => {
-		let respone = await confirmProofByListStudentCodeApi(acId, listUserId);
-		return respone;
-	}
-);
 
 export const createOrUpdateActivityAction = createAsyncThunk(
 	'news/addNews',

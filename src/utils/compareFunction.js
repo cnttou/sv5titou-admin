@@ -23,9 +23,9 @@ export const compareNumber = (a, b) => {
 };
 const pointSort = {
 	typeActivity: {
-		require: 3,
-		other: 2,
-		register: 1,
+		require: 3000,
+		other: 2000,
+		register: 1000,
 	},
 	target: {
 		'dao-duc': 100,
