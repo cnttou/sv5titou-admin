@@ -2,6 +2,26 @@ import firebase from './firebase';
 import { deleteProofImage } from './firebaseStorage';
 const db = firebase.firestore();
 
+const ACTIVITY = 'news';
+
+export const serializerDoc = (querySnapshot) => {
+	let data = [];
+	querySnapshot.forEach((doc) => {
+		data.push({
+			...doc.data(),
+			id: doc.id,
+		});
+	});
+	return data;
+};
+export const getActivityApi = () => db.collection(ACTIVITY).get();
+export const getRegisterActivityApi = () =>
+	db.collection(ACTIVITY).where('typeActivity', '==', 'register').get();
+
+export const deleteActivityApi = (id) => db.collection(ACTIVITY).doc(id).delete();
+export const updateActivityApi = (id, data) => db.collection(ACTIVITY).doc(id).set(data);
+export const addActivityApi = (id, data) => db.collection(ACTIVITY).doc(id).set(data);
+
 export const getSlideShowApi = () => {
 	return db
 		.collection('slide_show')

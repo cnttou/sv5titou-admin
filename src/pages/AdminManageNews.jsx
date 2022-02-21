@@ -1,14 +1,7 @@
-import { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import {
-	createOrUpdateActivityAction,
-	deleteActivityAction,
-	getAllDataAction,
-} from '../store/actions';
+import { useEffect, useState } from 'react';
 import Loading from '../components/Loading';
-import { Space, Button, Layout, Switch, Modal, Carousel, Image } from 'antd';
+import { Space, Button, Layout, Switch, Modal, message } from 'antd';
 import { compareStringDate, compareStringName } from '../utils/compareFunction';
-import useCreateEditActivityModel from '../hooks/useCreateEditActivityModel';
 import styles from '../styles/Admin.module.css';
 import TableCustom from '../components/TableCustom';
 import {
@@ -17,13 +10,20 @@ import {
 	nameLevelActivity,
 } from '../config';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
+import {
+	addActivityApi,
+	deleteActivityApi,
+	getRegisterActivityApi,
+	serializerDoc,
+	updateActivityApi,
+} from '../api/firestore';
+import FormActivity from '../forms/FormActivity';
 import { uid as genId } from 'uid';
 
 const { Content } = Layout;
 const { confirm } = Modal;
 
 const initActivity = {
-	id: genId(20),
 	image: '',
 	active: true,
 	department: null,
@@ -36,61 +36,89 @@ const initActivity = {
 	target: [],
 };
 
-export default function AdminManageNews() {
-	const listNews = useSelector((state) =>
-		state.activity.value.filter((c) => c.typeActivity === 'register')
-	);
-	const dispatch = useDispatch();
+const TYPE_ACTION = {
+	EDIT: 'edit',
+	ADD: 'add',
+};
 
-	useEffect(() => {
-		if (listNews.length === 0) {
-			dispatch(getAllDataAction());
-		}
-	}, []);
+const initChooseActivity = {
+	type: '',
+	activity: {},
+};
+export default function AdminManageNews() {
+	const [listActivity, setListActivity] = useState([]);
+	const [showModel, setShowModel] = useState(false);
+	const [loadingForm, setLoadingForm] = useState(false);
+	const [chooseActivity, setChooseActivity] = useState(initChooseActivity);
 
 	const handleShowModelToEdit = (item) => {
-		setDataModel(item);
-		setVisible(true);
+		setChooseActivity({ type: TYPE_ACTION.EDIT, activity: item });
+		setShowModel(true);
 	};
 
 	const handleShowModelToAddNew = () => {
-		setDataModel({ ...initActivity });
-		setVisible(true);
+		setChooseActivity({ type: TYPE_ACTION.ADD, activity: initActivity });
+		setShowModel(true);
 	};
 
-	const handleDelete = (item) => {
-		console.log('clicked delete activity', item);
+	const handleDeleteActivity = (item) => {
 		confirm({
 			title: 'Bạn có chắc muốn xóa hoạt động?',
 			icon: <ExclamationCircleOutlined />,
 			content: item.name,
 			onOk() {
-				return dispatch(deleteActivityAction(item.id));
+				return deleteActivityApi(item.id)
+					.then(() => {
+						message.success('Xóa thành công');
+						setListActivity((prevActivity) =>
+							prevActivity.filter((a) => a.id !== item.id)
+						);
+					})
+					.catch(() => {
+						message.error('Xóa thất bại vui lòng thử lại');
+					});
 			},
 			onCancel() {},
 		});
 	};
 
-	const { ui, visible, setVisible, setDataModel } =
-		useCreateEditActivityModel({
-			title: 'Tạo hoặc chỉnh sửa hoạt động',
-		});
-
-	const handleSwitchActive = (value, data, index) => {
-		// console.log('log ', value, data, index);
-		dispatch(
-			createOrUpdateActivityAction({
-				data: { ...data, active: value },
-				docId: data.id,
-			})
-		)
+	const handleUpdateActivity = (data, item) => {
+		updateActivityApi(item.id, { ...item, ...data })
 			.then(() => {
-				setVisible(false);
+				message.success('Cập nhật thành công');
+				setListActivity((prevActivity) =>
+					prevActivity.map((a) =>
+						a.id === item.id ? { ...a, ...data } : a
+					)
+				);
+				setShowModel(false);
+				setLoadingForm(false);
 			})
 			.catch((err) => {
-				message.error('Hành động không thành công. Vui lòng thử lại');
-				console.log(err.message);
+				message.error('Cập nhật không thành công. Vui lòng thử lại');
 			});
+	};
+
+	const handleSubmitModel = (data) => {
+		if (chooseActivity.type === TYPE_ACTION.ADD) {
+			const id = genId(20);
+			addActivityApi(id, {...data, createAt: new Date().getTime()})
+				.then(() => {
+					message.success('Thêm thành công');
+					setListActivity((prevActivity) => [
+						...prevActivity,
+						{ ...data, id },
+					]);
+					setChooseActivity(initChooseActivity);
+					setShowModel(false);
+				})
+				.catch(() => {
+					message.error('Thêm không thành công, vui lòng thử lại');
+				});
+			setLoadingForm(false);
+		} else {
+			handleUpdateActivity(data, chooseActivity.activity);
+		}
 	};
 	const columns = [
 		{
@@ -113,7 +141,7 @@ export default function AdminManageNews() {
 				<Switch
 					checked={text}
 					onChange={(value) =>
-						handleSwitchActive(value, record, index)
+						handleUpdateActivity({ active: value }, record, index)
 					}
 					size="small"
 				/>
@@ -192,7 +220,7 @@ export default function AdminManageNews() {
 					<Button onClick={() => handleShowModelToEdit(record)}>
 						Sửa
 					</Button>
-					<Button danger onClick={() => handleDelete(record)}>
+					<Button danger onClick={() => handleDeleteActivity(record)}>
 						Xóa
 					</Button>
 				</Space>
@@ -203,9 +231,9 @@ export default function AdminManageNews() {
 	const loadTable = () => (
 		<TableCustom
 			columns={columns}
-			dataSource={listNews}
+			dataSource={listActivity}
 			pagination={false}
-			scroll={{ y: 'calc(100vh - 200px)' }}
+			scroll={{ y: window.screen.height - 200 }}
 			footer={() => (
 				<Button type="primary" block onClick={handleShowModelToAddNew}>
 					Thêm hoạt động
@@ -213,10 +241,33 @@ export default function AdminManageNews() {
 			)}
 		/>
 	);
+
+	useEffect(() => {
+		getRegisterActivityApi()
+			.then(serializerDoc)
+			.then((data) => {
+				setListActivity(data);
+			});
+	}, []);
+
 	return (
 		<Content className={styles.content}>
-			{listNews?.length ? loadTable() : <Loading />}
-			{ui()}
+			{listActivity?.length ? loadTable() : <Loading />}
+			<Modal
+				width={770}
+				visible={showModel}
+				title={'Tạo hoặc chỉnh sửa hoạt động'}
+				centered={true}
+				onCancel={() => setShowModel(false)}
+				footer={null}
+			>
+				<FormActivity
+					item={chooseActivity.activity}
+					handleSubmit={handleSubmitModel}
+					loading={loadingForm}
+					setLoading={setLoadingForm}
+				/>
+			</Modal>
 		</Content>
 	);
 }
