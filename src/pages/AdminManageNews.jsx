@@ -13,7 +13,7 @@ import { ExclamationCircleOutlined } from '@ant-design/icons';
 import {
 	addActivityApi,
 	deleteActivityApi,
-	getRegisterActivityApi,
+	getAllRegisterActivityApi,
 	serializerDoc,
 	updateActivityApi,
 } from '../api/firestore';
@@ -243,7 +243,7 @@ export default function AdminManageNews() {
 	);
 
 	useEffect(() => {
-		getRegisterActivityApi()
+		getAllRegisterActivityApi()
 			.then(serializerDoc)
 			.then((data) => {
 				setListActivity(data);

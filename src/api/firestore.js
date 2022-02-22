@@ -14,8 +14,10 @@ export const serializerDoc = (querySnapshot) => {
 	});
 	return data;
 };
-export const getActivityApi = () => db.collection(ACTIVITY).get();
-export const getRegisterActivityApi = () =>
+export const getAllActivityApi = () => db.collection(ACTIVITY).get();
+export const getAllOtherActivityApi = () =>
+	db.collection(ACTIVITY).where('typeActivity', '!=', 'register').get();
+export const getAllRegisterActivityApi = () =>
 	db.collection(ACTIVITY).where('typeActivity', '==', 'register').get();
 
 export const deleteActivityApi = (id) => db.collection(ACTIVITY).doc(id).delete();
