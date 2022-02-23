@@ -53,7 +53,7 @@ function ActivityFeed(props) {
 				bordered={bordered || false}
 				className={styles.card}
 				style={
-					showFull ? { maxHeight: '75vh', overflow: 'scroll' } : null
+					showFull ? { maxHeight: '75vh' } : null
 				}
 				title={
 					<>

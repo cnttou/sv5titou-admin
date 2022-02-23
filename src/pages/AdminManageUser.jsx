@@ -6,7 +6,18 @@ import {
 	updateConfirmProofAction,
 	getAllDataAction,
 } from '../store/actions';
-import { Table, Layout, Button, Switch, Select, Tag, Space, Image } from 'antd';
+import {
+	Table,
+	Layout,
+	Button,
+	Switch,
+	Select,
+	Tag,
+	Space,
+	Image,
+	Modal,
+	message,
+} from 'antd';
 import styles from '../styles/Admin.module.css';
 import useModelOnlyShowActivity from '../hooks/useModelOnlyShowActivity';
 import InputSelectWithAddItem from '../components/InputSelectWithAddItem';
@@ -23,8 +34,20 @@ import TableCustom from '../components/TableCustom';
 import useModelUser from '../hooks/useModelUser';
 import { CSVLink } from 'react-csv';
 import { handleSortActivity } from '../utils/compareFunction';
-import { checkFileImage } from '../components/ActivityFeed';
+import ActivityFeed, { checkFileImage } from '../components/ActivityFeed';
 import { PaperClipOutlined } from '@ant-design/icons';
+import {
+	getActivityByIds,
+	getAllUserApi,
+	getAllUserActivityApi,
+	getUserByIds,
+	serializerDoc,
+	serializerDocToObject,
+	getUserActivityByUids,
+	updateUserActivityApi,
+	updateUserApi,
+} from '../api/firestore';
+import UserDetail from '../components/UserDetail';
 
 const { Content } = Layout;
 
@@ -107,111 +130,119 @@ export default function AdminManageUser() {
 	const dispatch = useDispatch();
 	const [csvData, setCsvData] = useState([]);
 	const [listRowChooseData, setListRowChooseData] = useState([]);
-	let { value: listUser, loading } = useSelector(
-		(state) => state.userActivity
-	);
-	const listNews = useSelector((state) => state.activity.value);
-	let { ui, setVisible, setDataModel } = useModelOnlyShowActivity({
-		title: 'Chi tiết hoạt động.',
-	});
-	let {
-		ui: uiUserDetail,
-		setVisible: setVisibleUserModel,
-		setDataModel: setDataModelUser,
-	} = useModelUser({
-		title: 'Chi tiết người dùng',
-	});
+	const [loading, setLoading] = useState(false);
+	const [chooseActivity, setChooseActivity] = useState();
+	const [showUserModel, setShowUserModel] = useState(false);
+	const [showActivityModel, setShowActivityModel] = useState(false);
+	const [dataModel, setDataModel] = useState(null);
+	const [userActivity, setUserActivity] = useState([]);
 
-	useEffect(async () => {
-		if (listUser.length === 0) dispatch(getAllDataAction());
-	}, []);
+	// const getImageActivity = (activities = [], condition = {}) => {
+	// 	const result = { ...initRestExportData };
+	// 	for (var value of activities) {
+	// 		if (value.confirm === false) continue;
+	// 		else if (value.typeActivity === 'require') {
+	// 			Object.values(value.images).forEach((image) => {
+	// 				if (image.target === 'hoc-tap') {
+	// 					result.requireHocTap.push(image.url);
+	// 				} else if (image.target === 'dao-duc') {
+	// 					result.requireDaoDuc.push(image.url);
+	// 				}
+	// 			});
+	// 		} else if (value.typeActivity === 'other') {
+	// 			Object.values(value.images).forEach((image) => {
+	// 				if (image.target === 'hoc-tap') {
+	// 					result.otherHocTap.push(image.url);
+	// 				} else if (image.target === 'dao-duc') {
+	// 					result.otherDaoDuc.push(image.url);
+	// 				}
+	// 			});
+	// 		} else {
+	// 			Object.values(value.images).forEach((image) => {
+	// 				if (image.target === 'tieu-bieu-khac') {
+	// 					result.targetOtherSuccess.push(image.url);
+	// 				} else if (image.target === 'hoi-nhap') {
+	// 					result.targetHoiNhap.push(image.url);
+	// 				} else if (image.target === 'ky-nang') {
+	// 					result.targetKyNang.push(image.url);
+	// 				} else if (image.target === 've-ngoai-ngu') {
+	// 					result.targetNgoaiNgu.push(image.url);
+	// 				} else if (image.target === 'tinh-nguyen') {
+	// 					result.targetTinhNguyen.push(image.url);
+	// 				} else if (image.target === 'the-luc') {
+	// 					result.targetTheLuc.push(image.url);
+	// 				}
+	// 			});
+	// 		}
+	// 	}
+	// 	return result;
+	// };
+	// useEffect(() => {
+	// 	if (loading === 0 && listRowChooseData.length) {
+	// 		const dataExport = listRowChooseData.map((user) => ({
+	// 			...user,
+	// 			sex: nameSex[user.sex],
+	// 			targetSuccess: user?.targetSuccess?.length
+	// 				? user.targetSuccess.map((c) => nameTarget[c]).join(', ')
+	// 				: '',
+	// 			majors: nameMajors[user.majors],
+	// 			department: nameDepartmentActivity[user.department],
+	// 			levelReview: nameLevelRegister[user.levelReview],
+	// 			...getImageActivity(Object.values(user.activities)),
+	// 		}));
+	// 		console.log('data export: ', dataExport);
+	// 		setCsvData(dataExport);
+	// 	} else {
+	// 		setCsvData([]);
+	// 	}
+	// }, [loading, userActivity, listRowChooseData]);
 
-	const getImageActivity = (activities = [], condition = {}) => {
-		const result = { ...initRestExportData };
-		for (var value of activities) {
-			if (value.confirm === false) continue;
-			else if (value.typeActivity === 'require') {
-				Object.values(value.images).forEach((image) => {
-					if (image.target === 'hoc-tap') {
-						result.requireHocTap.push(image.url);
-					} else if (image.target === 'dao-duc') {
-						result.requireDaoDuc.push(image.url);
-					}
-				});
-			} else if (value.typeActivity === 'other') {
-				Object.values(value.images).forEach((image) => {
-					if (image.target === 'hoc-tap') {
-						result.otherHocTap.push(image.url);
-					} else if (image.target === 'dao-duc') {
-						result.otherDaoDuc.push(image.url);
-					}
-				});
-			} else {
-				Object.values(value.images).forEach((image) => {
-					if (image.target === 'tieu-bieu-khac') {
-						result.targetOtherSuccess.push(image.url);
-					} else if (image.target === 'hoi-nhap') {
-						result.targetHoiNhap.push(image.url);
-					} else if (image.target === 'ky-nang') {
-						result.targetKyNang.push(image.url);
-					} else if (image.target === 've-ngoai-ngu') {
-						result.targetNgoaiNgu.push(image.url);
-					} else if (image.target === 'tinh-nguyen') {
-						result.targetTinhNguyen.push(image.url);
-					} else if (image.target === 'the-luc') {
-						result.targetTheLuc.push(image.url);
-					}
-				});
-			}
-		}
-		return result;
-	};
-	useEffect(() => {
-		if (loading === 0 && listRowChooseData.length) {
-			const dataExport = listRowChooseData.map((user) => ({
-				...user,
-				sex: nameSex[user.sex],
-				targetSuccess: user?.targetSuccess?.length
-					? user.targetSuccess.map((c) => nameTarget[c]).join(', ')
-					: '',
-				majors: nameMajors[user.majors],
-				department: nameDepartmentActivity[user.department],
-				levelReview: nameLevelRegister[user.levelReview],
-				...getImageActivity(Object.values(user.activities)),
-			}));
-			console.log('data export: ', dataExport);
-			setCsvData(dataExport);
-		} else {
-			setCsvData([]);
-		}
-	}, [loading, listUser, listRowChooseData]);
-
-	const handleConfirm = (uid, acId, confirm) => {
-		console.log('handle confirm: ', { uid, acId, confirm });
-		if (confirm === 'true')
-			dispatch(updateConfirmProofAction({ uid, acId, confirm: true }));
-		else if (confirm === 'false')
-			dispatch(updateConfirmProofAction({ uid, acId, confirm: false }));
-		else dispatch(updateConfirmProofAction({ uid, acId, confirm }));
-	};
-	const handleClickNameActivity = (item, uid) => {
-		setDataModel({ ...item, uid });
-		setVisible(true);
-	};
-	const handleShowUserDetail = (item) => {
-		console.log(item);
-		setDataModelUser(item);
-		setVisibleUserModel(true);
-	};
-	const handleChangeTargetSuccess = (value, item) => {
-		dispatch(
-			addUserDetailAction({
-				uid: item.uid,
-				targetSuccess: value,
+	const handleConfirmActivity = (item, confirm) => {
+		let data = {};
+		if (confirm === 'true') data = { confirm: true };
+		else if (confirm === 'false') data = { confirm: false };
+		else data = { confirm };
+		updateUserActivityApi(item.id, data)
+			.then(() => {
+				message.success('Cập nhật thành công');
+				setUserActivity((preState) =>
+					preState.map((usr) =>
+						usr.id === item.uid
+							? {
+									...usr,
+									activities: usr.activities.map((a) =>
+										a.id === item.id ? { ...a, ...data } : a
+									),
+							  }
+							: usr
+					)
+				);
 			})
-		).then((res) => {
-			console.log('them thanh cong');
-		});
+			.catch(() => {
+				message.error('Cập nhật thất bại, vui lòng thử lại');
+			});
+	};
+	const handleClickNameActivity = (item) => {
+		setDataModel({ ...item, uid: item.uid });
+		setShowActivityModel(true);
+	};
+	const handleClickNameUser = (item) => {
+		setDataModel(item);
+		setShowUserModel(true);
+	};
+	const handleChangeTargetSuccess = (targetSuccess, user) => {
+		updateUserApi(user.id, { targetSuccess })
+			.then((res) => {
+				message.success('Cập nhật thành công');
+				setUserActivity((preState) =>
+					preState.map((usr) =>
+						usr.id === user.id ? { ...usr, targetSuccess } : usr
+					)
+				);
+			})
+			.catch(() => {
+				message.error('Cập nhật thất bại, vui lòng thử lại');
+			});
 	};
 	const expandedRowRender = (user) => {
 		const columns = [
@@ -240,9 +271,7 @@ export default function AdminManageUser() {
 					return (
 						<Button
 							type="link"
-							onClick={() =>
-								handleClickNameActivity(item, user.uid)
-							}
+							onClick={() => handleClickNameActivity(item)}
 						>
 							{item.name}
 						</Button>
@@ -264,45 +293,56 @@ export default function AdminManageUser() {
 			{
 				title: 'Minh chứng',
 				key: 'proof',
-				render: (item) => (
-					<Space
-						style={{ maxWidth: 350, overflowX: 'auto' }}
-						direction="horizontal"
-					>
-						{Object.values(item.images).map((file) => (
-							<div key={file.name}>
-								{checkFileImage(file.name) ? (
-									<>
-										<Image
-											height={80}
-											width={130}
-											style={{ objectFit: 'cover' }}
-											alt={file.name}
-											src={file.url}
-										/>
-									</>
-								) : (
-									<div key={file.name}>
-										<Button
-											icon={<PaperClipOutlined />}
-											type="link"
-											block
+				render: (item) =>
+					item.proof.length ? (
+						<Space
+							style={{ maxWidth: 350, overflowX: 'auto' }}
+							direction="horizontal"
+						>
+							{item.proof.map((file) => (
+								<div key={file.name}>
+									{checkFileImage(file.name) ? (
+										<>
+											<Image
+												height={80}
+												width={130}
+												style={{ objectFit: 'cover' }}
+												alt={file.name}
+												src={file.url}
+											/>
+										</>
+									) : (
+										<div key={file.name}>
+											<Button
+												icon={<PaperClipOutlined />}
+												type="link"
+												block
+											>
+												<a
+													target="_blank"
+													href={file.url}
+												>
+													{`${file.name}`}
+												</a>
+											</Button>
+										</div>
+									)}
+									{item.target.length > 1 && (
+										<p
+											style={{
+												textAlign: 'center',
+												margin: 0,
+											}}
 										>
-											<a target="_blank" href={file.url}>
-												{`${file.name}`}
-											</a>
-										</Button>
-									</div>
-								)}
-								{item.target.length > 1 && (
-									<p style={{ textAlign: 'center', margin: 0 }}>
-										{nameTarget[file.target]}
-									</p>
-								)}
-							</div>
-						))}
-					</Space>
-				),
+											{nameTarget[file.target]}
+										</p>
+									)}
+								</div>
+							))}
+						</Space>
+					) : (
+						'Không có'
+					),
 			},
 			{
 				title: 'Trạng thái',
@@ -339,9 +379,7 @@ export default function AdminManageUser() {
 						<InputSelectWithAddItem
 							value={item.confirm.toString()}
 							option={option}
-							setValue={(key) =>
-								handleConfirm(user.uid, item.id, key)
-							}
+							setValue={(key) => handleConfirmActivity(item, key)}
 							style={{
 								width: '100%',
 								maxWidth: 250,
@@ -352,26 +390,20 @@ export default function AdminManageUser() {
 			},
 		];
 
-		return (
-			<>
-				{user.activities && (
-					<Table
-						style={{ backgroundColor: '#69c0ff' }}
-						columns={columns}
-						dataSource={
-							Object.values(user.activities)
-								.sort(handleSortActivity)
-								.map((c, key) => ({
-									...c,
-									key,
-								})) || []
-						}
-						size="small"
-						pagination={false}
-					/>
-				)}
-			</>
-		);
+		if (user.activities.length)
+			return (
+				<Table
+					style={{ backgroundColor: '#69c0ff' }}
+					columns={columns}
+					dataSource={user.activities.map((c, index) => ({
+						...c,
+						key: index,
+					}))}
+					size="small"
+					pagination={false}
+				/>
+			);
+		else return <></>;
 	};
 
 	const handleSelectRowTabel = (record, selected, selectedRows, e) => {
@@ -383,11 +415,8 @@ export default function AdminManageUser() {
 			title: 'Tên',
 			key: 'fullName',
 			render: (record) => (
-				<Button
-					type="link"
-					onClick={() => handleShowUserDetail(record)}
-				>
-					{record.fullName}
+				<Button type="link" onClick={() => handleClickNameUser(record)}>
+					{record.fullName || record.displayName}
 				</Button>
 			),
 		},
@@ -452,14 +481,57 @@ export default function AdminManageUser() {
 		},
 	];
 
+	useEffect(async () => {
+		setLoading(true);
+		getAllUserApi()
+			.then(serializerDoc)
+			.then((data) => {
+				setUserActivity(data);
+				setLoading(false);
+				const uids = data.map((c) => c.id);
+				return uids;
+			})
+			.then(async (uids) => {
+				let userActivities = await getUserActivityByUids(uids).then(
+					serializerDoc
+				);
+
+				let acIds = userActivities.map((c) => c.acId);
+				acIds = [...new Set(acIds)];
+
+				const activities = await getActivityByIds(acIds).then(
+					serializerDocToObject
+				);
+				userActivities = userActivities
+					.map((c) => ({
+						...c,
+						...activities[c.acId],
+						id: c.id,
+					}))
+					.filter((c) => c.name);
+				setUserActivity((preState) =>
+					preState.map((user) => ({
+						...user,
+						activities:
+							userActivities.filter(
+								(mapUserAc) => mapUserAc.uid === user.id
+							) || [],
+					}))
+				);
+			});
+	}, []);
+
+	useEffect(() => {
+		console.log(userActivity);
+	}, [userActivity]);
+
 	const loadTable = (listUser = []) => (
 		<TableCustom
 			pagination={false}
 			columns={columns}
 			expandable={{
 				expandedRowRender,
-				rowExpandable: (record) =>
-					Object.keys(record.activities).length,
+				rowExpandable: (record) => record?.activities?.length,
 			}}
 			rowSelection={{
 				onSelect: handleSelectRowTabel,
@@ -472,7 +544,7 @@ export default function AdminManageUser() {
 	);
 	return (
 		<Content className={styles.contentAdminManageUser}>
-			{loading === 0 && csvData.length !== 0 && (
+			{loading == false && csvData.length !== 0 && (
 				<CSVLink
 					filename={'Export-SV5T.csv'}
 					data={csvData}
@@ -482,13 +554,35 @@ export default function AdminManageUser() {
 					Xuất dữ liệu đã chọn
 				</CSVLink>
 			)}
-			{listUser?.length ? (
-				loadTable(listUser.map((c, key) => ({ ...c, key })))
+			{!loading ? (
+				loadTable(userActivity.map((c) => ({ ...c, key: c.id })))
 			) : (
 				<Loading />
 			)}
-			{ui()}
-			{uiUserDetail()}
+			<Modal
+				// width={770}
+				visible={showUserModel || showActivityModel}
+				title={
+					showUserModel ? 'Chi tiết sinh viên' : 'Chi tiết hoạt động'
+				}
+				centered={true}
+				onCancel={() => {
+					setShowUserModel(false);
+					setShowActivityModel(false);
+				}}
+				footer={null}
+			>
+				{showUserModel && <UserDetail {...dataModel} />}
+				{showActivityModel && (
+					<ActivityFeed
+						{...dataModel}
+						canRemoveProof={true}
+						showFull={true}
+						btnDetail={false}
+						loading={false}
+					/>
+				)}
+			</Modal>
 		</Content>
 	);
 }

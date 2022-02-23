@@ -14,7 +14,7 @@ function UserDetail(props) {
 				hoverable={false}
 				bordered={true}
 				className={styles.card}
-				style={{ maxHeight: '75vh', overflow: 'scroll' }}
+				style={{ maxHeight: '75vh' }}
 				title={
 					fullName && <>
 						<Title level={5}>{fullName}</Title>

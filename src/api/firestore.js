@@ -1,8 +1,10 @@
 import firebase from './firebase';
 import { deleteProofImage } from './firebaseStorage';
 const db = firebase.firestore();
-
+const { documentId } = firebase.firestore.FieldPath;
 const ACTIVITY = 'news';
+const USER = 'user';
+const USER_ACTIVITY = 'user_activity';
 
 export const serializerDoc = (querySnapshot) => {
 	let data = [];
@@ -14,15 +16,56 @@ export const serializerDoc = (querySnapshot) => {
 	});
 	return data;
 };
+
+export const serializerDocToObject = (querySnapshot) => {
+	let data = {};
+	querySnapshot.forEach((doc) => {
+		data[doc.id] = {
+			...doc.data(),
+			id: doc.id,
+		};
+	});
+	return data;
+};
+//GET ALL
+export const getAllUserApi = () => db.collection(USER).get();
 export const getAllActivityApi = () => db.collection(ACTIVITY).get();
 export const getAllOtherActivityApi = () =>
 	db.collection(ACTIVITY).where('typeActivity', '!=', 'register').get();
 export const getAllRegisterActivityApi = () =>
 	db.collection(ACTIVITY).where('typeActivity', '==', 'register').get();
+export const getAllUserActivityApi = () => db.collection(USER_ACTIVITY).get();
 
-export const deleteActivityApi = (id) => db.collection(ACTIVITY).doc(id).delete();
-export const updateActivityApi = (id, data) => db.collection(ACTIVITY).doc(id).set(data);
-export const addActivityApi = (id, data) => db.collection(ACTIVITY).doc(id).set(data);
+//GET WITH WHERE
+export const getUserByIds = (ids = []) =>
+	db.collection(USER).where(documentId(), 'in', ids).get();
+export const getActivityByIds = (ids = []) =>
+	db.collection(ACTIVITY).where(documentId(), 'in', ids).get();
+export const getUserActivityByUids = (uids = []) =>
+	db.collection(USER_ACTIVITY).where('uid', 'in', uids).get();
+export const getUserActivityByAcIds = (acIds = []) =>
+	db.collection(USER_ACTIVITY).where('acId', 'in', acIds).get();
+//ADD
+export const addActivityApi = (id, data) =>
+	db.collection(ACTIVITY).doc(id).set(data);
+
+//UPDATE
+export const updateActivityApi = (id, data) =>
+	db.collection(ACTIVITY).doc(id).update(data);
+export const updateUserApi = (id, data) =>
+	db.collection(USER).doc(id).update(data);
+export const updateUserActivityApi = (id, data) =>
+	db.collection(USER_ACTIVITY).doc(id).update(data);
+
+//DELETE
+export const deleteActivityApi = (id) =>
+	db.collection(ACTIVITY).doc(id).delete();
+export const deleteUserApi = (id) =>
+	db.collection(USER).doc(id).delete();
+
+
+
+
 
 export const getSlideShowApi = () => {
 	return db
