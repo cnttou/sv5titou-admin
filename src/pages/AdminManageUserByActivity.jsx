@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import Loading from '../components/Loading';
-import { updateConfirmProofAction, getAllDataAction } from '../store/actions';
 import {
 	Layout,
 	Button,
-	Switch,
 	Space,
 	Input,
 	message,
@@ -17,10 +14,17 @@ import styles from '../styles/Admin.module.css';
 import InputSelectWithAddItem from '../components/InputSelectWithAddItem';
 import { nameLevelActivity, nameTarget, nameTypeActivity } from '../config';
 import TableCustom from '../components/TableCustom';
-import useModelUser from '../hooks/useModelUser';
-import { checkFileImage } from '../components/ActivityFeed';
+import ActivityFeed, { checkFileImage } from '../components/ActivityFeed';
 import { PaperClipOutlined } from '@ant-design/icons';
-import { handleSortActivity } from '../utils/compareFunction';
+import {
+	getActivityApi,
+	getUserActivityByAcIds,
+	getUserByIds,
+	serializerDoc,
+	serializerDocToObject,
+	updateUserActivityApi,
+} from '../api/firestore';
+import UserDetail from '../components/UserDetail';
 
 const { Text } = Typography;
 const { Content } = Layout;
@@ -71,38 +75,66 @@ const option = [
 
 export default function AdminManageUserByActivity() {
 	const [inputStudentCode, setInputStudentCode] = useState('');
-	const dispatch = useDispatch();
-	const listNews = useSelector((s) =>
-		s.activity.value
-			.map((c, key) => ({ ...c, key }))
-			.sort(handleSortActivity)
-	);
-	let {
-		ui: uiUserDetail,
-		setVisible: setVisibleUserModel,
-		setDataModel: setDataModelUser,
-	} = useModelUser({
-		title: 'Chi tiết người dùng',
-	});
+	const [activities, setActivities] = useState([]);
+	const [loading, setLoading] = useState(false);
+	const [showUserModel, setShowUserModel] = useState(false);
+	const [showActivityModel, setShowActivityModel] = useState(false);
+	const [dataModel, setDataModel] = useState(null);
+
 	useEffect(async () => {
-		if (listNews.length === 0) dispatch(getAllDataAction());
+		setLoading(true);
+		getActivityApi()
+			.then(serializerDoc)
+			.then((data) => {
+				setActivities(data);
+				setLoading(false);
+				const acIds = data.map((c) => c.id);
+				if (acIds.length > 10) acIds.length = 10;
+				return acIds;
+			})
+			.then((acIds) => {
+				getMoreUserDetail(acIds);
+			})
+			.catch(() => {
+				message.error('Không thể tải dữ liệu vui lòng thử lại');
+			});
 	}, []);
 
-	const handleConfirm = (uid, acId, confirm) => {
-		console.log('handle confirm: ', { uid, acId, confirm });
-		if (confirm === 'true')
-			return dispatch(
-				updateConfirmProofAction({ uid, acId, confirm: true })
-			);
-		else if (confirm === 'false')
-			return dispatch(
-				updateConfirmProofAction({ uid, acId, confirm: false })
-			);
-		else return dispatch(updateConfirmProofAction({ uid, acId, confirm }));
+	useEffect(() => {
+		console.log(activities);
+	}, [activities]);
+
+	const handleConfirmActivity = (user, confirm) => {
+		let data = {};
+		if (confirm === 'true') data = { confirm: true };
+		else if (confirm === 'false') data = { confirm: false };
+		else data = { confirm };
+		updateUserActivityApi(user.id, data)
+			.then(() => {
+				message.success('Cập nhật thành công');
+				setActivities((preState) =>
+					preState.map((activity) =>
+						activity.id === user.acId
+							? {
+									...activity,
+									users: activity.users.map((u) =>
+										u.uid === user.uid
+											? { ...u, ...data }
+											: u
+									),
+							  }
+							: activity
+					)
+				);
+			})
+			.catch(() => {
+				message.error('Cập nhật thất bại, vui lòng thử lại');
+			});
 	};
-	const handleShowUserDetail = (uid, acId, item) => {
-		setDataModelUser(item);
-		setVisibleUserModel(true);
+
+	const handleClickNameUser = (item) => {
+		setDataModel(item);
+		setShowUserModel(true);
 	};
 	const expandedRowRender = (activity, index) => {
 		const columns = [
@@ -112,9 +144,7 @@ export default function AdminManageUserByActivity() {
 				render: (item) => (
 					<Button
 						type="link"
-						onClick={() =>
-							handleShowUserDetail(item.id, activity.id, item)
-						}
+						onClick={() => handleClickNameUser(item)}
 					>
 						{item.fullName || item.displayName}
 					</Button>
@@ -135,13 +165,13 @@ export default function AdminManageUserByActivity() {
 			{
 				title: 'Minh chứng',
 				key: 'proof',
-				render: (user) => (
-					<Space
-						style={{ maxWidth: 350, overflowX: 'auto' }}
-						direction="horizontal"
-					>
-						{Object.values(user.activities[activity.id]?.images).map(
-							(file) => (
+				render: (item) =>
+					item.proof.length ? (
+						<Space
+							style={{ maxWidth: 350, overflowX: 'auto' }}
+							direction="horizontal"
+						>
+							{item.proof.map((file) => (
 								<div key={file.name}>
 									{checkFileImage(file.name) ? (
 										<>
@@ -169,8 +199,7 @@ export default function AdminManageUserByActivity() {
 											</Button>
 										</div>
 									)}
-									{user.activities[activity.id].target
-										.length > 1 && (
+									{item.target.length > 1 && (
 										<p
 											style={{
 												textAlign: 'center',
@@ -181,40 +210,31 @@ export default function AdminManageUserByActivity() {
 										</p>
 									)}
 								</div>
-							)
-						)}
-					</Space>
-				),
+							))}
+						</Space>
+					) : (
+						'Không có'
+					),
 			},
 			{
 				title: 'Trạng thái',
 				key: 'confirm',
 				filters: filterConfirm,
 				onFilter: (value, record) => {
-					const currentActivity = record.activities[activity.id];
-					if (value === 'notproof')
-						return currentActivity.proof === 0;
+					if (value === 'notproof') return record.proof === 0;
 					else if (value === 'cancel')
-						return currentActivity.confirm.toString().length > 5;
+						return record.confirm.toString().length > 5;
 					else if (value === 'false')
-						return (
-							currentActivity.confirm === false &&
-							currentActivity.proof !== 0
-						);
-					else if (value === 'true')
-						return currentActivity.confirm === true;
+						return record.confirm === false && record.proof !== 0;
+					else if (value === 'true') return record.confirm === true;
 				},
 				defaultFilteredValue: [],
 				render: (user) => {
 					return (
 						<InputSelectWithAddItem
-							value={user.activities[
-								activity.id
-							].confirm.toString()}
+							value={user.confirm.toString()}
 							option={option}
-							setValue={(key) =>
-								handleConfirm(user.uid, activity.id, key)
-							}
+							setValue={(key) => handleConfirmActivity(user, key)}
 							style={{
 								width: '100%',
 								maxWidth: 250,
@@ -274,7 +294,7 @@ export default function AdminManageUserByActivity() {
 			onOk() {
 				return Promise.all(
 					listUserId.map((uid) =>
-						handleConfirm(uid, activity.id, true)
+						handleConfirmActivity(uid, activity.id, true)
 					)
 				);
 			},
@@ -286,24 +306,6 @@ export default function AdminManageUserByActivity() {
 		console.log(listUserId);
 	};
 	const columns = [
-		{
-			title: 'Trạng thái',
-			dataIndex: 'active',
-			key: 'active',
-			filters: [
-				{
-					text: 'Chưa kích hoạt',
-					value: 'false',
-				},
-				{
-					text: 'Đã kích hoạt',
-					value: 'true',
-				},
-			],
-			defaultFilteredValue: ['true'],
-			onFilter: (value, record) => record.active.toString() === value,
-			render: (text) => <Switch checked={text} size="small" />,
-		},
 		{
 			title: 'Loại hoạt động',
 			dataIndex: 'typeActivity',
@@ -330,7 +332,7 @@ export default function AdminManageUserByActivity() {
 			})),
 			onFilter: (value, record) => record.level === value,
 			key: 'level',
-			render: (text) => nameLevelActivity[text],
+			render: (text) => nameLevelActivity[text] || '---',
 		},
 		{
 			title: 'Tiêu chí',
@@ -342,7 +344,11 @@ export default function AdminManageUserByActivity() {
 			onFilter: (value, record) => record.target.includes(value),
 			render: (text) => text.target.map((c) => nameTarget[c]).join(', '),
 		},
-		{ title: 'Ngày diễn ra', dataIndex: 'date', key: 'date' },
+		{
+			title: 'Ngày diễn ra',
+			key: 'date',
+			render: (text) => text.date || '---',
+		},
 		{
 			title: 'Xác nhận bằng danh sách MSSV',
 			key: 'action',
@@ -366,22 +372,86 @@ export default function AdminManageUserByActivity() {
 				) : null,
 		},
 	];
-	const loadTable = (list = []) => (
-		<TableCustom
-			pagination={false}
-			columns={columns}
-			expandable={{
-				expandedRowRender,
-				rowExpandable: (activity) => activity.users.length,
-			}}
-			dataSource={list}
-			size="small"
-		/>
-	);
+
+	const getMoreUserDetail = async (acIds) => {
+		setLoading(true);
+		let userActivities = await getUserActivityByAcIds(acIds).then(
+			serializerDoc
+		);
+
+		let uids = userActivities.map((c) => c.uid);
+		uids = [...new Set(uids)];
+
+		if (!uids.length) return setLoading(false);
+		const users = await getUserByIds(uids).then(serializerDocToObject);
+
+		userActivities = userActivities
+			.map((c) => ({
+				...users[c.uid],
+				...c,
+			}))
+			.filter((c) => c.displayName && c.proof);
+		setActivities((preState) =>
+			preState.map((activity) => ({
+				...activity,
+				users: userActivities.filter(
+					(mapUserAc) => mapUserAc.acId === activity.id
+				),
+			}))
+		);
+		setLoading(false);
+	};
+	const onChangeTable = (
+		{ current, pageSize },
+		filters,
+		sorter,
+		{ currentDataSource, action }
+	) => {
+		if (action !== 'paginate') return;
+		const start = (current - 1) * pageSize;
+		const end = start + pageSize;
+		getMoreUserDetail(currentDataSource.slice(start, end).map((c) => c.id));
+	};
+
 	return (
 		<Content className={styles.contentAdminManageUser}>
-			{listNews?.length ? loadTable(listNews) : <Loading />}
-			{uiUserDetail()}
+			<TableCustom
+				columns={columns}
+				expandable={{
+					expandedRowRender,
+					rowExpandable: (activity) => activity?.users?.length,
+				}}
+				dataSource={activities}
+				loading={loading}
+				rowKey={(record) => record.id}
+				rowClassName="rowTable"
+				size="middle"
+				pagination={{ position: ['topCenter'] }}
+				onChange={onChangeTable}
+			/>
+			<Modal
+				visible={showUserModel || showActivityModel}
+				title={
+					showUserModel ? 'Chi tiết sinh viên' : 'Chi tiết hoạt động'
+				}
+				centered={true}
+				onCancel={() => {
+					setShowUserModel(false);
+					setShowActivityModel(false);
+				}}
+				footer={null}
+			>
+				{showUserModel && <UserDetail {...dataModel} />}
+				{showActivityModel && (
+					<ActivityFeed
+						{...dataModel}
+						canRemoveProof={true}
+						showFull={true}
+						btnDetail={false}
+						loading={false}
+					/>
+				)}
+			</Modal>
 		</Content>
 	);
 }

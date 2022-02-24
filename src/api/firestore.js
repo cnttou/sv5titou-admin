@@ -30,6 +30,7 @@ export const serializerDocToObject = (querySnapshot) => {
 //GET ALL
 export const getAllUserApi = () => db.collection(USER).get();
 export const getAllActivityApi = () => db.collection(ACTIVITY).get();
+export const getActivityApi = () => db.collection(ACTIVITY).where("active", "==", true).get();
 export const getAllOtherActivityApi = () =>
 	db.collection(ACTIVITY).where('typeActivity', '!=', 'register').get();
 export const getAllRegisterActivityApi = () =>

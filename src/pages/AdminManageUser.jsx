@@ -1,11 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import Loading from '../components/Loading';
-import {
-	addUserDetailAction,
-	updateConfirmProofAction,
-	getAllDataAction,
-} from '../store/actions';
 import {
 	Table,
 	Layout,
@@ -19,28 +13,20 @@ import {
 	message,
 } from 'antd';
 import styles from '../styles/Admin.module.css';
-import useModelOnlyShowActivity from '../hooks/useModelOnlyShowActivity';
 import InputSelectWithAddItem from '../components/InputSelectWithAddItem';
 import {
 	fieldPesonal,
-	nameDepartmentActivity,
 	nameLevelActivity,
 	nameLevelRegister,
-	nameMajors,
-	nameSex,
 	nameTarget,
 } from '../config';
 import TableCustom from '../components/TableCustom';
-import useModelUser from '../hooks/useModelUser';
 import { CSVLink } from 'react-csv';
-import { handleSortActivity } from '../utils/compareFunction';
 import ActivityFeed, { checkFileImage } from '../components/ActivityFeed';
 import { PaperClipOutlined } from '@ant-design/icons';
 import {
 	getActivityByIds,
 	getAllUserApi,
-	getAllUserActivityApi,
-	getUserByIds,
 	serializerDoc,
 	serializerDocToObject,
 	getUserActivityByUids,
@@ -127,7 +113,6 @@ const tagRender = (props) => {
 };
 
 export default function AdminManageUser() {
-	const dispatch = useDispatch();
 	const [csvData, setCsvData] = useState([]);
 	const [listRowChooseData, setListRowChooseData] = useState([]);
 	const [loading, setLoading] = useState(false);
@@ -489,59 +474,60 @@ export default function AdminManageUser() {
 				setUserActivity(data);
 				setLoading(false);
 				const uids = data.map((c) => c.id);
+				if (uids.length > 10) uids.length = 10;
 				return uids;
 			})
 			.then(async (uids) => {
-				let userActivities = await getUserActivityByUids(uids).then(
-					serializerDoc
-				);
-
-				let acIds = userActivities.map((c) => c.acId);
-				acIds = [...new Set(acIds)];
-
-				const activities = await getActivityByIds(acIds).then(
-					serializerDocToObject
-				);
-				userActivities = userActivities
-					.map((c) => ({
-						...c,
-						...activities[c.acId],
-						id: c.id,
-					}))
-					.filter((c) => c.name);
-				setUserActivity((preState) =>
-					preState.map((user) => ({
-						...user,
-						activities:
-							userActivities.filter(
-								(mapUserAc) => mapUserAc.uid === user.id
-							) || [],
-					}))
-				);
+				getMoreUserDetail(uids);
 			});
 	}, []);
+	const getMoreUserDetail = async (uids) => {
+		setLoading(true);
+		let userActivities = await getUserActivityByUids(uids).then(
+			serializerDoc
+		);
+
+		let acIds = userActivities.map((c) => c.acId);
+		acIds = [...new Set(acIds)];
+
+		if (!acIds.length) return setLoading(false);
+
+		const activities = await getActivityByIds(acIds).then(
+			serializerDocToObject
+		);
+		userActivities = userActivities
+			.map((c) => ({
+				...activities[c.acId],
+				...c,
+			}))
+			.filter((c) => c.name && c.proof);
+		setUserActivity((preState) =>
+			preState.map((user) => ({
+				...user,
+				activities:
+					userActivities.filter(
+						(mapUserAc) => mapUserAc.uid === user.id
+					) || [],
+			}))
+		);
+		setLoading(false);
+	};
+	const onChangeTable = (
+		{ current, pageSize },
+		filters,
+		sorter,
+		{ currentDataSource, action }
+	) => {
+		if (action !== 'paginate') return;
+		const start = (current - 1) * pageSize;
+		const end = start + pageSize;
+		getMoreUserDetail(currentDataSource.slice(start, end).map((c) => c.id));
+	};
 
 	useEffect(() => {
 		console.log(userActivity);
 	}, [userActivity]);
 
-	const loadTable = (listUser = []) => (
-		<TableCustom
-			pagination={false}
-			columns={columns}
-			expandable={{
-				expandedRowRender,
-				rowExpandable: (record) => record?.activities?.length,
-			}}
-			rowSelection={{
-				onSelect: handleSelectRowTabel,
-				onSelectAll: handleSelectRowTabel,
-			}}
-			dataSource={listUser}
-			size="small"
-			sticky={true}
-		/>
-	);
 	return (
 		<Content className={styles.contentAdminManageUser}>
 			{loading == false && csvData.length !== 0 && (
@@ -554,13 +540,26 @@ export default function AdminManageUser() {
 					Xuất dữ liệu đã chọn
 				</CSVLink>
 			)}
-			{!loading ? (
-				loadTable(userActivity.map((c) => ({ ...c, key: c.id })))
-			) : (
-				<Loading />
-			)}
+			<TableCustom
+				columns={columns}
+				expandable={{
+					expandedRowRender,
+					rowExpandable: (record) => record?.activities?.length,
+				}}
+				rowSelection={{
+					onSelect: handleSelectRowTabel,
+					onSelectAll: handleSelectRowTabel,
+				}}
+				dataSource={userActivity}
+				loading={loading}
+				rowKey={(record) => record.id}
+				size="middle"
+				rowClassName="rowTable"
+				pagination={{ position: ['topCenter'] }}
+				sticky={true}
+				onChange={onChangeTable}
+			/>
 			<Modal
-				// width={770}
 				visible={showUserModel || showActivityModel}
 				title={
 					showUserModel ? 'Chi tiết sinh viên' : 'Chi tiết hoạt động'
