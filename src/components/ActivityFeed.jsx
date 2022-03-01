@@ -13,10 +13,10 @@ import { nameLevelActivity, nameTarget } from '../config';
 
 const { Text, Title } = Typography;
 
-export const typeFileimage = ['.jpeg', '.jpg', '.png'];
+export const typeFileimage = ['jpeg', 'jpg', 'png'];
 
-export const checkFileImage = (fileName) => {
-	return typeFileimage.includes(fileName.slice(fileName.lastIndexOf('.')));
+export const checkFileImage = (type) => {
+	return typeFileimage.includes(type);
 };
 function ActivityFeed(props) {
 	const {

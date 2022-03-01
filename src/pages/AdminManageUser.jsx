@@ -23,7 +23,7 @@ import {
 import TableCustom from '../components/TableCustom';
 import { CSVLink } from 'react-csv';
 import ActivityFeed, { checkFileImage } from '../components/ActivityFeed';
-import { PaperClipOutlined } from '@ant-design/icons';
+import { ExclamationCircleOutlined, PaperClipOutlined } from '@ant-design/icons';
 import {
 	getActivityByIds,
 	getAllUserApi,
@@ -36,6 +36,7 @@ import {
 import UserDetail from '../components/UserDetail';
 
 const { Content } = Layout;
+const { confirm } = Modal;
 
 const option = [
 	{
@@ -187,7 +188,7 @@ export default function AdminManageUser() {
 		if (confirm === 'true') data = { confirm: true };
 		else if (confirm === 'false') data = { confirm: false };
 		else data = { confirm };
-		updateUserActivityApi(item.id, data)
+		return updateUserActivityApi(item.id, data)
 			.then(() => {
 				message.success('Cập nhật thành công');
 				setUserActivity((preState) =>
@@ -228,6 +229,17 @@ export default function AdminManageUser() {
 			.catch(() => {
 				message.error('Cập nhật thất bại, vui lòng thử lại');
 			});
+	};
+    const showBoxQuestion = (item, key) => {
+		confirm({
+			title: 'Bạn có chắc muốn xác nhận hoạt động?',
+			icon: <ExclamationCircleOutlined />,
+			content: 'Hoạt động này KHÔNG có minh chứng',
+			onOk() {
+				return handleConfirmActivity(item, key);
+			},
+			onCancel() {},
+		});
 	};
 	const expandedRowRender = (user) => {
 		const columns = [
@@ -279,14 +291,14 @@ export default function AdminManageUser() {
 				title: 'Minh chứng',
 				key: 'proof',
 				render: (item) =>
-					item.proof.length ? (
+					Object.values(item.proof).length ? (
 						<Space
 							style={{ maxWidth: 350, overflowX: 'auto' }}
 							direction="horizontal"
 						>
-							{item.proof.map((file) => (
+							{Object.values(item.proof).map((file) => (
 								<div key={file.name}>
-									{checkFileImage(file.name) ? (
+									{checkFileImage(file.typeFile) ? (
 										<>
 											<Image
 												height={80}
@@ -312,16 +324,14 @@ export default function AdminManageUser() {
 											</Button>
 										</div>
 									)}
-									{item.target.length > 1 && (
-										<p
-											style={{
-												textAlign: 'center',
-												margin: 0,
-											}}
-										>
-											{nameTarget[file.target]}
-										</p>
-									)}
+									<p
+										style={{
+											textAlign: 'center',
+											margin: 0,
+										}}
+									>
+										{nameTarget[file.target]}
+									</p>
 								</div>
 							))}
 						</Space>
@@ -360,11 +370,16 @@ export default function AdminManageUser() {
 				},
 				defaultFilteredValue: [],
 				render: (item) => {
+                    console.log("item: ", item)
 					return (
 						<InputSelectWithAddItem
 							value={item.confirm.toString()}
 							option={option}
-							setValue={(key) => handleConfirmActivity(item, key)}
+							setValue={(key) =>
+								Object.values(item.proof || {}).length
+									? handleConfirmActivity(item, key)
+									: showBoxQuestion(item, key)
+							}
 							style={{
 								width: '100%',
 								maxWidth: 250,

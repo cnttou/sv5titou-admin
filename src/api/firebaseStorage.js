@@ -11,7 +11,6 @@ export const taskEvent = firebase.storage.TaskEvent.STATE_CHANGED;
 
 export const upFileApi = (id, file) => {
 	let fileProofRef = imagesSlideRef.child(id);
-	console.log('file upload', file);
 	return fileProofRef.child(`/${file.name}`).put(file);
 };
 
@@ -22,15 +21,18 @@ export const deleteFileByFullPathApi = (fullPath = '') => {
 };
 export const deleteProofImage = (uid, acId = '') => {
 	let folderProofRef = imagesRef.child(uid).child(acId);
-	return folderProofRef.listAll().then((res) => {
-		let kq = [];
-		res.items.forEach((itemRef) => {
-			kq.push(itemRef.delete());
+	return folderProofRef
+		.listAll()
+		.then((res) => {
+			let kq = [];
+			res.items.forEach((itemRef) => {
+				kq.push(itemRef.delete());
+			});
+			return Promise.all(kq);
+		})
+		.then(() => {
+			console.log('delete imgase success');
 		});
-		return Promise.all(kq);
-	}).then(()=>{
-        console.log('delete imgase success')
-    });
 };
 
 export const getFileFromAActivityApi = (acId) => {

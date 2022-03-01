@@ -107,10 +107,6 @@ export const addDataApi = (collection = 'news', data, docId) => {
 	}
 };
 export const addUserDetailApi = (uid, targetSuccess) => {
-	console.log('data add :', {
-		uid,
-		targetSuccess,
-	});
 	return db
 		.collection('register_activity')
 		.doc(uid)

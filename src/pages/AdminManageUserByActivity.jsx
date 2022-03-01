@@ -15,7 +15,7 @@ import InputSelectWithAddItem from '../components/InputSelectWithAddItem';
 import { nameLevelActivity, nameTarget, nameTypeActivity } from '../config';
 import TableCustom from '../components/TableCustom';
 import ActivityFeed, { checkFileImage } from '../components/ActivityFeed';
-import { PaperClipOutlined } from '@ant-design/icons';
+import { ExclamationCircleOutlined, PaperClipOutlined } from '@ant-design/icons';
 import {
 	getActivityApi,
 	getUserActivityByAcIds,
@@ -109,7 +109,7 @@ export default function AdminManageUserByActivity() {
 		if (confirm === 'true') data = { confirm: true };
 		else if (confirm === 'false') data = { confirm: false };
 		else data = { confirm };
-		updateUserActivityApi(user.id, data)
+		return updateUserActivityApi(user.id, data)
 			.then(() => {
 				message.success('Cập nhật thành công');
 				setActivities((preState) =>
@@ -136,6 +136,20 @@ export default function AdminManageUserByActivity() {
 		setDataModel(item);
 		setShowUserModel(true);
 	};
+
+    const showBoxQuestion = (user, key) => {
+		confirm({
+			title: 'Bạn có chắc muốn xác nhận hoạt động?',
+			icon: <ExclamationCircleOutlined />,
+			content:
+				'Hoạt động này KHÔNG có minh chứng',
+			onOk() {
+				return handleConfirmActivity(user, key);
+			},
+			onCancel() {},
+		});
+	};
+
 	const expandedRowRender = (activity, index) => {
 		const columns = [
 			{
@@ -166,14 +180,14 @@ export default function AdminManageUserByActivity() {
 				title: 'Minh chứng',
 				key: 'proof',
 				render: (item) =>
-					item.proof.length ? (
+					item.proof && Object.values(item.proof)?.length ? (
 						<Space
 							style={{ maxWidth: 350, overflowX: 'auto' }}
 							direction="horizontal"
 						>
-							{item.proof.map((file) => (
+							{Object.values(item.proof).map((file) => (
 								<div key={file.name}>
-									{checkFileImage(file.name) ? (
+									{checkFileImage(file.typeFile) ? (
 										<>
 											<Image
 												height={80}
@@ -199,16 +213,14 @@ export default function AdminManageUserByActivity() {
 											</Button>
 										</div>
 									)}
-									{item.target.length > 1 && (
-										<p
-											style={{
-												textAlign: 'center',
-												margin: 0,
-											}}
-										>
-											{nameTarget[file.target]}
-										</p>
-									)}
+									<p
+										style={{
+											textAlign: 'center',
+											margin: 0,
+										}}
+									>
+										{nameTarget[file.target]}
+									</p>
 								</div>
 							))}
 						</Space>
@@ -234,7 +246,11 @@ export default function AdminManageUserByActivity() {
 						<InputSelectWithAddItem
 							value={user.confirm.toString()}
 							option={option}
-							setValue={(key) => handleConfirmActivity(user, key)}
+							setValue={(key) =>
+								Object.values(user.proof || {}).length
+									? handleConfirmActivity(user, key)
+									: showBoxQuestion(user, key)
+							}
 							style={{
 								width: '100%',
 								maxWidth: 250,
