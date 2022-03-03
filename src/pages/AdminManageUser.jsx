@@ -19,11 +19,17 @@ import {
 	nameLevelActivity,
 	nameLevelRegister,
 	nameTarget,
+	nameSex,
+	nameMajors,
+	nameDepartmentActivity,
 } from '../config';
 import TableCustom from '../components/TableCustom';
 import { CSVLink } from 'react-csv';
 import ActivityFeed, { checkFileImage } from '../components/ActivityFeed';
-import { ExclamationCircleOutlined, PaperClipOutlined } from '@ant-design/icons';
+import {
+	ExclamationCircleOutlined,
+	PaperClipOutlined,
+} from '@ant-design/icons';
 import {
 	getActivityByIds,
 	getAllUserApi,
@@ -117,71 +123,70 @@ export default function AdminManageUser() {
 	const [csvData, setCsvData] = useState([]);
 	const [listRowChooseData, setListRowChooseData] = useState([]);
 	const [loading, setLoading] = useState(false);
-	const [chooseActivity, setChooseActivity] = useState();
 	const [showUserModel, setShowUserModel] = useState(false);
 	const [showActivityModel, setShowActivityModel] = useState(false);
 	const [dataModel, setDataModel] = useState(null);
 	const [userActivity, setUserActivity] = useState([]);
 
-	// const getImageActivity = (activities = [], condition = {}) => {
-	// 	const result = { ...initRestExportData };
-	// 	for (var value of activities) {
-	// 		if (value.confirm === false) continue;
-	// 		else if (value.typeActivity === 'require') {
-	// 			Object.values(value.images).forEach((image) => {
-	// 				if (image.target === 'hoc-tap') {
-	// 					result.requireHocTap.push(image.url);
-	// 				} else if (image.target === 'dao-duc') {
-	// 					result.requireDaoDuc.push(image.url);
-	// 				}
-	// 			});
-	// 		} else if (value.typeActivity === 'other') {
-	// 			Object.values(value.images).forEach((image) => {
-	// 				if (image.target === 'hoc-tap') {
-	// 					result.otherHocTap.push(image.url);
-	// 				} else if (image.target === 'dao-duc') {
-	// 					result.otherDaoDuc.push(image.url);
-	// 				}
-	// 			});
-	// 		} else {
-	// 			Object.values(value.images).forEach((image) => {
-	// 				if (image.target === 'tieu-bieu-khac') {
-	// 					result.targetOtherSuccess.push(image.url);
-	// 				} else if (image.target === 'hoi-nhap') {
-	// 					result.targetHoiNhap.push(image.url);
-	// 				} else if (image.target === 'ky-nang') {
-	// 					result.targetKyNang.push(image.url);
-	// 				} else if (image.target === 've-ngoai-ngu') {
-	// 					result.targetNgoaiNgu.push(image.url);
-	// 				} else if (image.target === 'tinh-nguyen') {
-	// 					result.targetTinhNguyen.push(image.url);
-	// 				} else if (image.target === 'the-luc') {
-	// 					result.targetTheLuc.push(image.url);
-	// 				}
-	// 			});
-	// 		}
-	// 	}
-	// 	return result;
-	// };
-	// useEffect(() => {
-	// 	if (loading === 0 && listRowChooseData.length) {
-	// 		const dataExport = listRowChooseData.map((user) => ({
-	// 			...user,
-	// 			sex: nameSex[user.sex],
-	// 			targetSuccess: user?.targetSuccess?.length
-	// 				? user.targetSuccess.map((c) => nameTarget[c]).join(', ')
-	// 				: '',
-	// 			majors: nameMajors[user.majors],
-	// 			department: nameDepartmentActivity[user.department],
-	// 			levelReview: nameLevelRegister[user.levelReview],
-	// 			...getImageActivity(Object.values(user.activities)),
-	// 		}));
-	// 		console.log('data export: ', dataExport);
-	// 		setCsvData(dataExport);
-	// 	} else {
-	// 		setCsvData([]);
-	// 	}
-	// }, [loading, userActivity, listRowChooseData]);
+	const getImageActivity = (activities = []) => {
+		const result = { ...initRestExportData };
+		for (var activity of activities) {
+			if (activity.confirm === false) continue;
+			if (activity.typeActivity === 'require') {
+				Object.values(activity.proof).forEach((image) => {
+					if (image.target === 'hoc-tap') {
+						result.requireHocTap.push(image.url);
+					} else if (image.target === 'dao-duc') {
+						result.requireDaoDuc.push(image.url);
+					}
+				});
+			} else if (activity.typeActivity === 'other') {
+				Object.values(activity.proof).forEach((image) => {
+					if (image.target === 'hoc-tap') {
+						result.otherHocTap.push(image.url);
+					} else if (image.target === 'dao-duc') {
+						result.otherDaoDuc.push(image.url);
+					}
+				});
+			} else {
+				Object.values(activity.proof).forEach((image) => {
+					if (image.target === 'tieu-bieu-khac') {
+						result.targetOtherSuccess.push(image.url);
+					} else if (image.target === 'hoi-nhap') {
+						result.targetHoiNhap.push(image.url);
+					} else if (image.target === 'ky-nang') {
+						result.targetKyNang.push(image.url);
+					} else if (image.target === 've-ngoai-ngu') {
+						result.targetNgoaiNgu.push(image.url);
+					} else if (image.target === 'tinh-nguyen') {
+						result.targetTinhNguyen.push(image.url);
+					} else if (image.target === 'the-luc') {
+						result.targetTheLuc.push(image.url);
+					}
+				});
+			}
+		}
+		return result;
+	};
+	useEffect(() => {
+		if (listRowChooseData.length) {
+			const dataExport = listRowChooseData.map((user) => ({
+				...user,
+				sex: nameSex[user.sex],
+				targetSuccess: user?.targetSuccess?.length
+					? user.targetSuccess.map((c) => nameTarget[c]).join(', ')
+					: '',
+				majors: nameMajors[user.majors],
+				department: nameDepartmentActivity[user.department],
+				levelReview: nameLevelRegister[user.levelReview],
+				...getImageActivity(user.activities),
+			}));
+			console.log('data export: ', dataExport);
+			setCsvData(dataExport);
+		} else {
+			setCsvData([]);
+		}
+	}, [listRowChooseData]);
 
 	const handleConfirmActivity = (item, confirm) => {
 		let data = {};
@@ -230,7 +235,7 @@ export default function AdminManageUser() {
 				message.error('Cập nhật thất bại, vui lòng thử lại');
 			});
 	};
-    const showBoxQuestion = (item, key) => {
+	const showBoxQuestion = (item, key) => {
 		confirm({
 			title: 'Bạn có chắc muốn xác nhận hoạt động?',
 			icon: <ExclamationCircleOutlined />,
@@ -370,7 +375,6 @@ export default function AdminManageUser() {
 				},
 				defaultFilteredValue: [],
 				render: (item) => {
-                    console.log("item: ", item)
 					return (
 						<InputSelectWithAddItem
 							value={item.confirm.toString()}
@@ -538,10 +542,6 @@ export default function AdminManageUser() {
 		const end = start + pageSize;
 		getMoreUserDetail(currentDataSource.slice(start, end).map((c) => c.id));
 	};
-
-	useEffect(() => {
-		console.log(userActivity);
-	}, [userActivity]);
 
 	return (
 		<Content className={styles.contentAdminManageUser}>
