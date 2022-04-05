@@ -29,12 +29,56 @@ export const serializerDocToObject = (querySnapshot) => {
 };
 //GET ALL
 export const getAllUserApi = () => db.collection(USER).get();
+export const getUserApi = (
+	page,
+	pageSize,
+	studentCode,
+	classUser,
+	levelReview,
+	targetSuccess,
+	next,
+	prev
+) => {
+	let ref = db.collection(USER);
+	if (studentCode) ref = ref.where('studentCode', '==', studentCode);
+	if (levelReview) ref = ref.where('levelReview', '==', levelReview);
+	if (classUser) ref = ref.where('classUser', '==', classUser);
+	if (targetSuccess && targetSuccess.length) {
+		if (targetSuccess.includes('none'))
+			ref = ref.where('targetSuccess', 'in', [[]]);
+		else ref = ref.where('targetSuccess', 'in', [targetSuccess]);
+	}
+	if (page && pageSize && next)
+		ref = ref.orderBy('createAt').startAfter(next).limit(pageSize);
+	else if (page && pageSize && prev)
+		ref = ref.orderBy('createAt').endBefore(prev).limitToLast(pageSize);
+	else ref = ref.orderBy('createAt').limit(pageSize);
+	return ref.get();
+};
+
+export const getUserExportApi = (classUser, levelReview, targetSuccess) => {
+	let ref = db.collection(USER);
+	if (levelReview) ref = ref.where('levelReview', '==', levelReview);
+	if (classUser) ref = ref.where('classUser', '==', classUser);
+	if (targetSuccess && targetSuccess.length) {
+		if (targetSuccess.includes('none'))
+			ref = ref.where('targetSuccess', 'in', [[]]);
+		else ref = ref.where('targetSuccess', 'in', [targetSuccess]);
+	}
+	return ref.get();
+};
+
 export const getAllActivityApi = () => db.collection(ACTIVITY).get();
-export const getActivityApi = () => db.collection(ACTIVITY).where("active", "==", true).get();
+export const getActivityApi = () =>
+	db.collection(ACTIVITY).where('active', '==', true).get();
 export const getAllOtherActivityApi = () =>
 	db.collection(ACTIVITY).where('typeActivity', '!=', 'register').get();
-export const getAllRegisterActivityApi = () =>
-	db.collection(ACTIVITY).where('typeActivity', '==', 'register').get();
+export const getAllRegisterActivityApi = (date, department, level, target) =>{
+    const ref = db.collection(ACTIVITY).where('typeActivity', '==', 'register');
+    if (date) ref.where("")
+
+	return ref.get();
+}
 export const getAllUserActivityApi = () => db.collection(USER_ACTIVITY).get();
 
 //GET WITH WHERE
@@ -61,12 +105,7 @@ export const updateUserActivityApi = (id, data) =>
 //DELETE
 export const deleteActivityApi = (id) =>
 	db.collection(ACTIVITY).doc(id).delete();
-export const deleteUserApi = (id) =>
-	db.collection(USER).doc(id).delete();
-
-
-
-
+export const deleteUserApi = (id) => db.collection(USER).doc(id).delete();
 
 export const getSlideShowApi = () => {
 	return db
@@ -75,7 +114,6 @@ export const getSlideShowApi = () => {
 		.then((querySnapshot) => {
 			let data = [];
 			querySnapshot.forEach((doc) => {
-				const { seconds, nanoseconds } = doc.data().deadline;
 				data.push({
 					...doc.data(),
 					id: doc.id,

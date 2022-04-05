@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import { Spin } from 'antd';
 
 export default function Loading({ size }) {
@@ -7,3 +8,6 @@ export default function Loading({ size }) {
 		</div>
 	);
 }
+Loading.propTypes = {
+	size: PropTypes.string,
+};

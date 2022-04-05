@@ -19,7 +19,7 @@ export const nameTypeActivity = {
 	other: 'Tiêu chuẩn khác',
 };
 
-export const fieldPesonal = {
+export const fieldPersonal = {
 	classUser: { label: 'Lớp' },
 	majors: { label: 'Chuyên ngành', parse: (value) => nameMajors[value] },
 	fullName: { label: 'Họ và tên' },
@@ -75,6 +75,16 @@ export const fieldPesonal = {
 		parse: (value) => nameTarget[value],
 	},
 };
+
+export const optionsTagTarget = [
+    { value: 'hoc-tap', label: 'Học tập', color: '#ff9c6e' },
+    { value: 'tinh-nguyen', label: 'Tình nguyện', color: '#ffc53d' },
+    { value: 'the-luc', label: 'Thể lực', color: '#bae637' },
+    { value: 'dao-duc', label: 'Đạo đức', color: '#f759ab' },
+    { value: 'hoi-nhap', label: 'Hội nhập', color: '#40a9ff' },
+    { value: 'none', label: 'Chưa hoàn thành cái nào', color: '#722ed1' },
+];
+
 export const nameDepartmentActivity = {
 	cntt: 'Công Nghệ Thông Tin',
 	cnsh: 'Công Nghệ Sinh Học',

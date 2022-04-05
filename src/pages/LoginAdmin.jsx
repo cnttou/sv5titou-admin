@@ -26,7 +26,7 @@ export default function LoginAdmin() {
 		let username = values.username.toString();
 		let password = values.password.toString();
 		loginWithEmailPasswordApi(username, password)
-			.then((res) => {
+			.then(() => {
 				history.push('/admin');
 			})
 			.catch((error) => {

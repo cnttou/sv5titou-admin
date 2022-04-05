@@ -1,24 +1,24 @@
+import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { Button, Layout, message, Modal, Space, Switch } from 'antd';
 import { useEffect, useState } from 'react';
+import { uid as genId } from 'uid';
+import {
+    addActivityApi,
+    deleteActivityApi,
+    getAllRegisterActivityApi,
+    serializerDoc,
+    updateActivityApi
+} from '../api/firestore';
+import FilterActivity from '../components/FilterActivity';
 import Loading from '../components/Loading';
-import { Space, Button, Layout, Switch, Modal, message } from 'antd';
-import { compareStringDate, compareStringName } from '../utils/compareFunction';
-import styles from '../styles/Admin.module.css';
 import TableCustom from '../components/TableCustom';
 import {
-	nameTarget,
-	nameDepartmentActivity,
-	nameLevelActivity,
+    nameDepartmentActivity,
+    nameLevelActivity, nameTarget
 } from '../config';
-import { ExclamationCircleOutlined } from '@ant-design/icons';
-import {
-	addActivityApi,
-	deleteActivityApi,
-	getAllRegisterActivityApi,
-	serializerDoc,
-	updateActivityApi,
-} from '../api/firestore';
 import FormActivity from '../forms/FormActivity';
-import { uid as genId } from 'uid';
+import styles from '../styles/Admin.module.css';
+import { compareStringDate, compareStringName } from '../utils/compareFunction';
 
 const { Content } = Layout;
 const { confirm } = Modal;
@@ -94,7 +94,7 @@ export default function AdminManageNews() {
 				setShowModel(false);
 				setLoadingForm(false);
 			})
-			.catch((err) => {
+			.catch(() => {
 				message.error('Cập nhật không thành công. Vui lòng thử lại');
 			});
 	};
@@ -120,6 +120,7 @@ export default function AdminManageNews() {
 			handleUpdateActivity(data, chooseActivity.activity);
 		}
 	};
+
 	const columns = [
 		{
 			title: 'Trạng thái',
@@ -242,16 +243,21 @@ export default function AdminManageNews() {
 		/>
 	);
 
+    const doGetAllRegisterActivity = (date, department, level, target)=>{
+        getAllRegisterActivityApi()
+            .then(serializerDoc)
+            .then((data) => {
+                setListActivity(data);
+            });
+    }
+
 	useEffect(() => {
-		getAllRegisterActivityApi()
-			.then(serializerDoc)
-			.then((data) => {
-				setListActivity(data);
-			});
+        doGetAllRegisterActivity();
 	}, []);
 
 	return (
 		<Content className={styles.content}>
+            <FilterActivity getData={doGetAllRegisterActivity} />
 			{listActivity?.length ? loadTable() : <Loading />}
 			<Modal
 				width={770}

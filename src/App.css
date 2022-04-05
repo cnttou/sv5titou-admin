@@ -7,8 +7,8 @@
   -moz-osx-font-smoothing: grayscale;
 } */
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+	font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+		monospace;
 }
 
 .header {
@@ -169,6 +169,14 @@ a {
 	color: #5890ff;
 }
 
-.rowTable{
-    background-color: #fafafa;
+.rowTable {
+	background-color: #fafafa;
+}
+
+.ant-table.ant-table-middle .ant-table-thead > tr > th {
+	white-space: nowrap;
+	min-width: 45px !important;
+}
+.ant-table.ant-table-middle .ant-table-tbody > tr > td {
+	min-width: 45px !important;
 }

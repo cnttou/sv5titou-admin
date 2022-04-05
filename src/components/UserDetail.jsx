@@ -1,6 +1,6 @@
 import { Typography, Card } from 'antd';
 import styles from '../styles/ActivityFeed.module.css';
-import { fieldPesonal } from '../config';
+import { fieldPersonal } from '../config';
 
 const { Text, Title } = Typography;
 
@@ -16,13 +16,15 @@ function UserDetail(props) {
 				className={styles.card}
 				style={{ maxHeight: '75vh' }}
 				title={
-					fullName && <>
-						<Title level={5}>{fullName}</Title>
-						<Text type="secondary">{studentCode}</Text>
-					</>
+					fullName && (
+						<>
+							<Title level={5}>{fullName}</Title>
+							<Text type="secondary">{studentCode}</Text>
+						</>
+					)
 				}
 			>
-				{Object.entries(fieldPesonal).map(([k, v], i) =>
+				{Object.entries(fieldPersonal).map(([k, v], i) =>
 					rest[k] ? (
 						<p key={i}>
 							<strong>{v.label}: </strong>

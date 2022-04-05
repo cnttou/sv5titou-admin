@@ -1,5 +1,18 @@
 import dayjs from 'dayjs';
 
+export const compareString = (a, b) => {
+	var nameA = a.toUpperCase(); // ignore upper and lowercase
+	var nameB = b.toUpperCase(); // ignore upper and lowercase
+	if (nameA < nameB) {
+		return -1;
+	}
+	if (nameA > nameB) {
+		return 1;
+	}
+
+	// names must be equal
+	return 0;
+};
 export const compareStringName = (a, b) => {
 	if (a.name > b.name) return 1;
 	else return -1;
@@ -39,7 +52,11 @@ const pointSort = {
 	},
 };
 export const handleSortActivity = (activity1, activity2) => {
-	let point1 = pointSort.typeActivity[activity1.typeActivity] + pointSort.target[activity1.target[0]];
-	let point2 = pointSort.typeActivity[activity2.typeActivity] + pointSort.target[activity2.target[0]];
+	let point1 =
+		pointSort.typeActivity[activity1.typeActivity] +
+		pointSort.target[activity1.target[0]];
+	let point2 =
+		pointSort.typeActivity[activity2.typeActivity] +
+		pointSort.target[activity2.target[0]];
 	return point2 - point1;
 };

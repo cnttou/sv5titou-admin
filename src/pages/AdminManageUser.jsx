@@ -1,48 +1,36 @@
-import { useEffect, useState } from 'react';
-import Loading from '../components/Loading';
 import {
-	Table,
-	Layout,
-	Button,
-	Switch,
-	Select,
-	Tag,
-	Space,
-	Image,
-	Modal,
-	message,
-} from 'antd';
-import styles from '../styles/Admin.module.css';
-import InputSelectWithAddItem from '../components/InputSelectWithAddItem';
-import {
-	fieldPesonal,
-	nameLevelActivity,
-	nameLevelRegister,
-	nameTarget,
-	nameSex,
-	nameMajors,
-	nameDepartmentActivity,
-} from '../config';
-import TableCustom from '../components/TableCustom';
-import { CSVLink } from 'react-csv';
-import ActivityFeed, { checkFileImage } from '../components/ActivityFeed';
-import {
-	ExclamationCircleOutlined,
-	PaperClipOutlined,
+    ExclamationCircleOutlined,
+    ExportOutlined,
+    FilterOutlined,
+    PaperClipOutlined,
+    ReloadOutlined
 } from '@ant-design/icons';
 import {
-	getActivityByIds,
-	getAllUserApi,
-	serializerDoc,
-	serializerDocToObject,
-	getUserActivityByUids,
-	updateUserActivityApi,
-	updateUserApi,
+    Button, Card, Form, Image, Input, Layout, message, Modal, Select, Space, Switch, Table, Tag
+} from 'antd';
+import Search from 'antd/lib/input/Search';
+import React, { useEffect, useState } from 'react';
+import { CSVLink } from 'react-csv';
+import {
+    getActivityByIds, getAllActivityApi,
+    getAllUserActivityApi, getUserActivityByUids, getUserApi, getUserExportApi, serializerDoc,
+    serializerDocToObject, updateUserActivityApi,
+    updateUserApi
 } from '../api/firestore';
+import ActivityFeed, { checkFileImage } from '../components/ActivityFeed';
+import InputSelectWithAddItem from '../components/InputSelectWithAddItem';
+import TableCustom from '../components/TableCustom';
 import UserDetail from '../components/UserDetail';
+import {
+    fieldPersonal, nameDepartmentActivity, nameLevelActivity,
+    nameLevelRegister, nameMajors, nameSex, nameTarget
+} from '../config';
+import styles from '../styles/Admin.module.css';
+import { compareString } from '../utils/compareFunction';
 
 const { Content } = Layout;
 const { confirm } = Modal;
+const { Option } = Select;
 
 const option = [
 	{
@@ -74,6 +62,7 @@ const options = [
 	{ value: 'the-luc', label: 'Thể lực', color: '#bae637' },
 	{ value: 'dao-duc', label: 'Đạo đức', color: '#f759ab' },
 	{ value: 'hoi-nhap', label: 'Hội nhập', color: '#40a9ff' },
+	{ value: 'none', label: 'Chưa hoàn thành cái nào', color: '#722ed1' },
 ];
 const colorOption = {
 	'hoc-tap': '#ff9c6e',
@@ -81,8 +70,9 @@ const colorOption = {
 	'the-luc': '#bae637',
 	'dao-duc': '#f759ab',
 	'hoi-nhap': '#40a9ff',
+	none: '#722ed1',
 };
-const headerCsv = Object.entries(fieldPesonal).map(([k, v]) => ({
+const headerCsv = Object.entries(fieldPersonal).map(([k, v]) => ({
 	label: v.label,
 	key: k,
 }));
@@ -99,7 +89,7 @@ const initRestExportData = {
 	otherDaoDuc: [],
 	requireDaoDuc: [],
 };
-const tagRender = (props) => {
+export const tagRender = (props) => {
 	const { label, value, closable, onClose } = props;
 	const onPreventMouseDown = (event) => {
 		event.preventDefault();
@@ -123,12 +113,21 @@ export default function AdminManageUser() {
 	const [csvData, setCsvData] = useState([]);
 	const [listRowChooseData, setListRowChooseData] = useState([]);
 	const [loading, setLoading] = useState(false);
+	const [total, setTotal] = useState(10);
+	const [loadingExport, setLoadingExport] = useState(false);
 	const [showUserModel, setShowUserModel] = useState(false);
+	const [showExportModel, setShowExportModel] = useState(false);
 	const [showActivityModel, setShowActivityModel] = useState(false);
 	const [dataModel, setDataModel] = useState(null);
 	const [userActivity, setUserActivity] = useState([]);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [searchStudent, setSearchStudent] = useState('');
+	const [searchClassUser, setSearchClassUser] = useState('');
+	const [filterLevelReview, setFilterLevelReview] = useState('');
+	const [filterTargetSuccess, setFilterTargetSuccess] = useState([]);
+	const [isFiltering, setIsFiltering] = useState(false);
 
-	const getImageActivity = (activities = []) => {
+	const getProofActivity = (activities = []) => {
 		const result = { ...initRestExportData };
 		for (var activity of activities) {
 			if (activity.confirm === false) continue;
@@ -168,25 +167,6 @@ export default function AdminManageUser() {
 		}
 		return result;
 	};
-	useEffect(() => {
-		if (listRowChooseData.length) {
-			const dataExport = listRowChooseData.map((user) => ({
-				...user,
-				sex: nameSex[user.sex],
-				targetSuccess: user?.targetSuccess?.length
-					? user.targetSuccess.map((c) => nameTarget[c]).join(', ')
-					: '',
-				majors: nameMajors[user.majors],
-				department: nameDepartmentActivity[user.department],
-				levelReview: nameLevelRegister[user.levelReview],
-				...getImageActivity(user.activities),
-			}));
-			console.log('data export: ', dataExport);
-			setCsvData(dataExport);
-		} else {
-			setCsvData([]);
-		}
-	}, [listRowChooseData]);
 
 	const handleConfirmActivity = (item, confirm) => {
 		let data = {};
@@ -223,7 +203,7 @@ export default function AdminManageUser() {
 	};
 	const handleChangeTargetSuccess = (targetSuccess, user) => {
 		updateUserApi(user.id, { targetSuccess })
-			.then((res) => {
+			.then(() => {
 				message.success('Cập nhật thành công');
 				setUserActivity((preState) =>
 					preState.map((usr) =>
@@ -323,6 +303,7 @@ export default function AdminManageUser() {
 												<a
 													target="_blank"
 													href={file.url}
+													rel="noreferrer"
 												>
 													{`${file.name}`}
 												</a>
@@ -397,6 +378,7 @@ export default function AdminManageUser() {
 		if (user.activities.length)
 			return (
 				<Table
+					tableLayout={'unset'}
 					style={{ backgroundColor: '#69c0ff' }}
 					columns={columns}
 					dataSource={user.activities.map((c, index) => ({
@@ -410,8 +392,7 @@ export default function AdminManageUser() {
 		else return <></>;
 	};
 
-	const handleSelectRowTabel = (record, selected, selectedRows, e) => {
-		console.log('selectedRowss', selectedRows);
+	const handleSelectRowTable = (record, selected, selectedRows) => {
 		setListRowChooseData(selectedRows);
 	};
 	const columns = [
@@ -428,23 +409,16 @@ export default function AdminManageUser() {
 			title: 'Mssv',
 			key: 'studentCode',
 			dataIndex: 'studentCode',
-			searchFilter: true,
 		},
 		{
 			title: 'Xét SV5T cấp',
 			key: 'levelReview',
-			filters: Object.entries(nameLevelRegister).map((c) => ({
-				text: c[1],
-				value: c[0],
-			})),
-			onFilter: (value, record) => record.levelReview === value,
 			render: (record) => nameLevelRegister[record.levelReview],
 		},
 		{
 			title: 'Lớp',
 			key: 'classUser',
 			dataIndex: 'classUser',
-			searchFilter: true,
 		},
 		{
 			title: 'Điểm RL',
@@ -459,15 +433,6 @@ export default function AdminManageUser() {
 		{
 			title: 'Đã hoàn thành',
 			key: 'action',
-			filters: options.map((c) => ({
-				value: c.value,
-				text: c.label,
-			})),
-			onFilter: (value, record) => {
-				if (record.targetSuccess)
-					return record.targetSuccess.includes(value) || false;
-				else return false;
-			},
 			render: (record) => (
 				<Select
 					maxTagCount="responsive"
@@ -485,23 +450,34 @@ export default function AdminManageUser() {
 		},
 	];
 
-	useEffect(async () => {
+	const getUser = (page = 1, pageSize = 10, ...other) => {
+		//other: studentCode, levelReview, classUser, targetSuccess;
 		setLoading(true);
-		getAllUserApi()
+		return getUserApi(page, pageSize, ...other)
 			.then(serializerDoc)
 			.then((data) => {
+				if (data.length === pageSize) {
+					setTotal(page * 10 + 10);
+				}
+				if (!data.length) {
+					message.warning('Không có dữ liệu');
+					setLoading(false);
+					return;
+				}
 				setUserActivity(data);
 				setLoading(false);
-				const uids = data.map((c) => c.id);
-				if (uids.length > 10) uids.length = 10;
-				return uids;
+				return data.map((c) => c.id);
 			})
 			.then(async (uids) => {
-				getMoreUserDetail(uids);
+				uids?.length && getMoreUserDetail(uids);
 			});
-	}, []);
+	};
+
+	const handleChangePage = (page) => {
+		setCurrentPage(page);
+	};
+
 	const getMoreUserDetail = async (uids) => {
-		setLoading(true);
 		let userActivities = await getUserActivityByUids(uids).then(
 			serializerDoc
 		);
@@ -509,7 +485,7 @@ export default function AdminManageUser() {
 		let acIds = userActivities.map((c) => c.acId);
 		acIds = [...new Set(acIds)];
 
-		if (!acIds.length) return setLoading(false);
+		if (!acIds.length) return;
 
 		const activities = await getActivityByIds(acIds).then(
 			serializerDocToObject
@@ -529,60 +505,229 @@ export default function AdminManageUser() {
 					) || [],
 			}))
 		);
-		setLoading(false);
 	};
-	const onChangeTable = (
-		{ current, pageSize },
-		filters,
-		sorter,
-		{ currentDataSource, action }
-	) => {
+	const onChangeTable = (paginate, filters, sorter, { action }) => {
 		if (action !== 'paginate') return;
-		const start = (current - 1) * pageSize;
-		const end = start + pageSize;
-		getMoreUserDetail(currentDataSource.slice(start, end).map((c) => c.id));
+		const nextPage =
+			paginate.current > currentPage
+				? userActivity[userActivity.length - 1]?.createAt
+				: null;
+		const prevPage =
+			paginate.current > currentPage ? null : userActivity[0].createAt;
+		setListRowChooseData([]);
+		if (isFiltering) {
+			getUser(
+				paginate.current,
+				10,
+				'',
+				searchClassUser,
+				filterLevelReview,
+				filterTargetSuccess,
+				nextPage,
+				prevPage
+			);
+		} else {
+			getUser(
+				paginate.current,
+				10,
+				null,
+				null,
+				null,
+				null,
+				nextPage,
+				prevPage
+			);
+		}
+		setCurrentPage(paginate.current);
 	};
+	const doResetFilter = () => {
+		setFilterLevelReview('');
+		setSearchClassUser('');
+		setFilterTargetSuccess([]);
+		setIsFiltering(false);
+		getUser();
+	};
+	const onFinfishExportForm = async (values) => {
+		const { classUser, levelReview, targetSuccess } = values;
+		setLoadingExport(true);
+		const users = await getUserExportApi(
+			classUser,
+			levelReview,
+			targetSuccess.sort((a, b) => compareString(b, a))
+		).then(serializerDoc);
+		if (!users.length) {
+			message.error('Không có dữ liệu nào để xuất');
+			setLoadingExport(false);
+			return;
+		}
+		let mapUserActivity = await getAllUserActivityApi().then(serializerDoc);
+		const activities = await getAllActivityApi().then(
+			serializerDocToObject
+		);
+
+		mapUserActivity = mapUserActivity
+			.map((c) => ({
+				...activities[c.acId],
+				...c,
+			}))
+			.filter((c) => c.name && c.proof);
+
+		const userHasActivity = users.map((user) => ({
+			...user,
+			activities:
+				mapUserActivity.filter(
+					(mapUserAc) => mapUserAc.uid === user.id
+				) || [],
+		}));
+
+		const dataExport = userHasActivity.map((user) => ({
+			...user,
+			sex: nameSex[user.sex],
+			targetSuccess: user?.targetSuccess?.length
+				? user.targetSuccess.map((c) => nameTarget[c]).join(', ')
+				: '',
+			majors: nameMajors[user.majors],
+			department: nameDepartmentActivity[user.department],
+			levelReview: nameLevelRegister[user.levelReview],
+			...getProofActivity(user.activities),
+		}));
+
+		setCsvData(dataExport);
+		setLoadingExport(false);
+	};
+
+	useEffect(async () => {
+		getUser();
+	}, []);
 
 	return (
 		<Content className={styles.contentAdminManageUser}>
-			{loading == false && csvData.length !== 0 && (
-				<CSVLink
-					filename={'Export-SV5T.csv'}
-					data={csvData}
-					target="_blank"
-					headers={headerCsv}
-				>
-					Xuất dữ liệu đã chọn
-				</CSVLink>
-			)}
+			<Card style={{ width: '100vw' }} size="small">
+				<Space>
+					<Search
+						placeholder="Tìm theo MSSV"
+						value={searchStudent}
+						onChange={(e) => setSearchStudent(e.target.value)}
+						onSearch={() => getUser(1, 10, searchStudent)}
+						enterButton
+					/>
+					<Input
+						placeholder="Lọc theo lớp"
+						value={searchClassUser}
+						onChange={(e) => setSearchClassUser(e.target.value)}
+					/>
+					<Select
+						onChange={(value) => setFilterLevelReview(value)}
+						placeholder="Lọc theo cấp xét"
+						style={{ minWidth: 200 }}
+						value={filterLevelReview || null}
+					>
+						{Object.entries(nameLevelRegister).map((c) => (
+							<Option key={c[0]} value={c[0]}>
+								{c[1]}
+							</Option>
+						))}
+						<Option value=""></Option>
+					</Select>
+					<Select
+						maxTagCount="responsive"
+						mode="tags"
+						placeholder="Lọc tiêu chí hoàn thành"
+						tagRender={tagRender}
+						style={{ minWidth: 200 }}
+						options={options}
+						value={filterTargetSuccess}
+						onChange={(value) => {
+							if (value.includes('none'))
+								setFilterTargetSuccess(['none']);
+							else
+								setFilterTargetSuccess(
+									value.sort((a, b) => compareString(b, a))
+								);
+						}}
+					/>
+					<Button
+						icon={<FilterOutlined />}
+						onClick={() => {
+							setIsFiltering(true);
+							setCurrentPage(1);
+							getUser(
+								1,
+								10,
+								'',
+								searchClassUser,
+								filterLevelReview,
+								filterTargetSuccess
+							);
+						}}
+					>
+						Lọc
+					</Button>
+					<Button
+						type="primary"
+						icon={<ReloadOutlined />}
+						onClick={() => {
+							doResetFilter();
+						}}
+					>
+						Đặt lại
+					</Button>
+					<Button
+						icon={<ExportOutlined />}
+						style={{ background: '#a0d911' }}
+						onClick={() => {
+							setShowExportModel(true);
+						}}
+					>
+						Xuất dữ liệu
+					</Button>
+				</Space>
+			</Card>
 			<TableCustom
+				style={{
+					height: 'calc(100vh - 82px - 64px)',
+					overflow: 'scroll',
+				}}
+				sticky={true}
+				loading={loading}
 				columns={columns}
 				expandable={{
 					expandedRowRender,
 					rowExpandable: (record) => record?.activities?.length,
 				}}
 				rowSelection={{
-					onSelect: handleSelectRowTabel,
-					onSelectAll: handleSelectRowTabel,
+					onSelect: handleSelectRowTable,
+					onSelectAll: handleSelectRowTable,
 				}}
 				dataSource={userActivity}
-				loading={loading}
 				rowKey={(record) => record.id}
 				size="middle"
+				align="center"
+				tableLayout={'unset'}
 				rowClassName="rowTable"
-				pagination={{ position: ['topCenter'] }}
-				sticky={true}
+				pagination={{
+					position: ['bottomCenter'],
+					simple: true,
+					current: currentPage,
+					total: total,
+					onChange: handleChangePage,
+				}}
 				onChange={onChangeTable}
 			/>
 			<Modal
-				visible={showUserModel || showActivityModel}
+				visible={showUserModel || showActivityModel || showExportModel}
 				title={
-					showUserModel ? 'Chi tiết sinh viên' : 'Chi tiết hoạt động'
+					showUserModel
+						? 'Chi tiết sinh viên'
+						: showExportModel
+						? 'Xuất dữ liệu'
+						: 'Chi tiết hoạt động'
 				}
 				centered={true}
 				onCancel={() => {
 					setShowUserModel(false);
 					setShowActivityModel(false);
+					setShowExportModel(false);
 				}}
 				footer={null}
 			>
@@ -595,6 +740,70 @@ export default function AdminManageUser() {
 						btnDetail={false}
 						loading={false}
 					/>
+				)}
+				{showExportModel && (
+					<>
+						<Form
+							labelCol={{ span: 6 }}
+							wrapperCol={{ span: 16 }}
+							layout="horizontal"
+							onFinish={onFinfishExportForm}
+						>
+							<Form.Item label="Chọn lớp" name="classUser">
+								<Input placeholder="Lọc theo lớp" />
+							</Form.Item>
+							<Form.Item
+								label="Cấp xét"
+								name="levelReview"
+								initialValues="xet-cap-khoa"
+								required
+							>
+								<Select placeholder="Lọc theo cấp xét">
+									{Object.entries(nameLevelRegister).map(
+										(c) => (
+											<Option key={c[0]} value={c[0]}>
+												{c[1]}
+											</Option>
+										)
+									)}
+								</Select>
+							</Form.Item>
+							<Form.Item
+								label="Tiêu chí"
+								name="targetSuccess"
+								required
+							>
+								<Select
+									mode="tags"
+									placeholder="Tiêu chí hoàn thành"
+									options={options}
+								/>
+							</Form.Item>
+							<Form.Item label="">
+								{csvData?.length && !loadingExport ? (
+									<CSVLink
+										filename={'Export-SV5T.csv'}
+										data={csvData}
+										target="_blank"
+										headers={headerCsv}
+										onClick={() =>
+											setShowExportModel(false)
+										}
+									>
+										Tải dữ liệu
+									</CSVLink>
+								) : (
+									<Button
+										type="primary"
+										htmlType="submit"
+										loading={loadingExport}
+									>
+										Xuất dữ liệu
+									</Button>
+								)}
+							</Form.Item>
+						</Form>
+					</>
 				)}
 			</Modal>
 		</Content>
