@@ -2,9 +2,8 @@ import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { deleteSlideShowAction, fetchSlideShowAction } from '../store/actions';
 import Loading from '../components/Loading';
-import { Space, Button, Layout, Modal, Typography, Image, Alert } from 'antd';
+import { Space, Button, Layout, Modal, Typography, Image, Alert, Table } from 'antd';
 import styles from '../styles/Admin.module.css';
-import TableCustom from '../components/TableCustom';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import useCreateEditSlideShowModel from '../hooks/useCreateEditSlideShowModel';
 import dayjs from 'dayjs';
@@ -106,7 +105,7 @@ export default function AdminManageSlide() {
 	];
 
 	const loadTable = () => (
-		<TableCustom
+		<Table
 			columns={columns}
 			dataSource={listSlideShow}
 			pagination={false}

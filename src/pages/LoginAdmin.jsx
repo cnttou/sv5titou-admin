@@ -1,4 +1,4 @@
-import { Layout, message, Typography } from 'antd';
+import { Card, Layout, message, Typography } from 'antd';
 import { useHistory, useLocation } from 'react-router-dom';
 import { auth, loginWithEmailPasswordApi } from '../api/authentication';
 import { Form, Input, Button } from 'antd';
@@ -8,7 +8,7 @@ const { Title } = Typography;
 const { Content } = Layout;
 
 const regxEmail =
-	/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/i;
+	/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/i;
 
 export default function LoginAdmin() {
 	let history = useHistory();
@@ -37,11 +37,8 @@ export default function LoginAdmin() {
 
 	return (
 		<Content className={styles.content}>
-			<div className="container-md AdminLogin">
-				<Title
-					level={5}
-					style={{ textAlign: 'center', marginBottom: 10 }}
-				>
+			<Card className={`container-md ${styles.AdminLogin}`}>
+				<Title level={5} style={{ textAlign: 'center', marginBottom: 10 }}>
 					ĐĂNG NHẬP
 				</Title>
 				<Form
@@ -94,7 +91,7 @@ export default function LoginAdmin() {
 						</Button>
 					</Form.Item>
 				</Form>
-			</div>
+			</Card>
 		</Content>
 	);
 }

@@ -96,26 +96,6 @@ const ExportStudent = () => {
 			levelReview,
 			targetSuccess.sort((a, b) => compareString(b, a))
 		).then(serializerDoc);
-		// if (!users.length) {
-		// 	message.error('Không có dữ liệu nào để xuất');
-		// 	setLoadingExport(false);
-		// 	return;
-		// }
-		// let mapUserActivity = await getAllUserActivityApi().then(serializerDoc);
-		// const activities = await getAllActivityApi().then(serializerDocToObject);
-
-		// mapUserActivity = mapUserActivity
-		// 	.map((c) => ({
-		// 		...activities[c.acId],
-		// 		...c,
-		// 	}))
-		// 	.filter((c) => c.name && c.proof);
-
-		// const userHasActivity = users.map((user) => ({
-		// 	...user,
-		// 	activities:
-		// 		mapUserActivity.filter((mapUserAc) => mapUserAc.uid === user.id) || [],
-		// }));
 
 		const dataExport = users.map((user) => ({
 			...user,

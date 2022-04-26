@@ -37,7 +37,7 @@ export default class InputSelectWithAddItem extends React.Component {
 
 	render() {
 		const { items, name } = this.state;
-		const { option, setValue, ...rest } = this.props;
+		const { setValue, ...rest } = this.props;
 		return (
 			<Select
 				{...rest}

@@ -9,7 +9,6 @@ import { Suspense } from 'react';
 import Loading from './components/Loading';
 import HeaderUser from './components/HeaderUser';
 import './App.css';
-import 'antd/dist/antd.css';
 import PrivateRoute from './routes/PrivateRoute';
 
 function App() {

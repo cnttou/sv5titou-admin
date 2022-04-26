@@ -49,9 +49,7 @@ function useCreateEditSlideShowModel({ title, action }) {
 
 		if (form.getFieldsValue().deadline)
 			data.deadline = dayjs(form.getFieldsValue().deadline).unix();
-		else data.deadline = 2556032400; //2556032400 is a year 2050
-
-		console.log(data);
+		else data.deadline = 2556032400;
 
 		dispatch(addSlideShowAction({ data, docId: dataModel.id }))
 			.then(() => {

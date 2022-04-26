@@ -1,24 +1,25 @@
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import {
-    Button,
-    Card,
-    Input,
-    Layout,
-    message,
-    Modal, Typography
+	AutoComplete,
+	Button,
+	Card,
+	Input,
+	Layout,
+	message,
+	Modal,
+	Table,
+	Typography,
 } from 'antd';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-    getAllRegisterActivityApi,
-    getUserApi,
-    serializerDoc,
-    updateUserActivityApi
+	getAllRegisterActivityApi,
+	getUserApi,
+	serializerDoc,
+	updateUserActivityApi,
 } from '../api/firestore';
-import ChooceActivity from '../components/ChooceActivity';
 import FilterStudent from '../components/FilterStudent';
 import InputSelectWithAddItem from '../components/InputSelectWithAddItem';
 import ShowProofImage from '../components/ShowProofImage';
-import TableCustom from '../components/TableCustom';
 import { optionProof } from '../config';
 import styles from '../styles/Admin.module.css';
 
@@ -31,9 +32,8 @@ export default function AdminManageUserByActivity() {
 	const [activityChoice, setActivityChoice] = useState();
 	const [activities, setActivities] = useState([]);
 	const [loading, setLoading] = useState(false);
-	const [showModel, setShowModel] = useState(false);
+	const [searchValue, setSearchValue] = useState('');
 	const inputStudentCode = useRef([]);
-	const [hasMoreData, setHasMoreData] = useState(false);
 	const filterValueRef = useRef({});
 
 	const handleConfirmActivity = (id, uid, confirm) => {
@@ -122,6 +122,10 @@ export default function AdminManageUserByActivity() {
 	};
 
 	const changePage = (isNextPage) => {
+		if (!activityChoice) {
+			message.warning('Vui lòng chọn hoạt động');
+			return;
+		}
 		const data = {
 			...filterValueRef.current,
 			previous: undefined,
@@ -133,9 +137,14 @@ export default function AdminManageUserByActivity() {
 	};
 
 	const getUser = (dataFilter) => {
+		if (!activityChoice) {
+			message.warning('Vui lòng chọn một hoạt động.');
+			return;
+		}
 		setLoading(true);
 		filterValueRef.current = dataFilter;
-		return getUserApi(dataFilter)
+        console.log(dataFilter);
+        return getUserApi({ ...dataFilter, acid: activityChoice.id })
 			.then(serializerDoc)
 			.then((data) => {
 				if (!data.length) {
@@ -146,7 +155,7 @@ export default function AdminManageUserByActivity() {
 			})
 			.catch((error) => {
 				message.error('Lỗi tải dữ liệu');
-				console.log(error);
+				console.error(error);
 			})
 			.finally(() => setLoading(false));
 	};
@@ -154,22 +163,27 @@ export default function AdminManageUserByActivity() {
 	const getActivities = (dataFilter, nextPage = false) => {
 		setLoading(true);
 		if (nextPage) dataFilter.next = activities[activities.length - 1];
-		else setHasMoreData(true);
 		return getAllRegisterActivityApi(dataFilter)
 			.then(serializerDoc)
 			.then((data) => {
 				if (!data.length) {
-					setHasMoreData(false);
 					return;
 				}
 				setActivities(data);
 			})
 			.catch((error) => {
 				message.error('Lỗi tải dữ liệu');
-				setHasMoreData(false);
 				console.log(error);
 			})
 			.finally(() => setLoading(false));
+	};
+
+	const onSelectActivity = (idChoice) => {
+		const activity = activities.find((c) => c.id === idChoice);
+		if (activity) {
+			setSearchValue(activity.name);
+			setActivityChoice(activity);
+		}
 	};
 
 	const columns = [
@@ -227,13 +241,31 @@ export default function AdminManageUserByActivity() {
 		},
 	];
 
+	useEffect(() => {
+		const timeout = setTimeout(() => {
+			getActivities({ nameSearch: searchValue });
+		}, 400);
+
+		return () => {
+			clearTimeout(timeout);
+		};
+	}, [searchValue]);
+
 	return (
 		<Content className={styles.contentAdminManageUser}>
 			<Card style={{ width: '100vw' }} size="small">
 				<div className={styles.itemBetween}>
-					<Button type="primary" onClick={() => setShowModel(true)}>
-						Chọn hoạt động
-					</Button>
+					<AutoComplete
+						autoFocus
+						options={activities.map((a) => ({ label: a.name, value: a.id }))}
+						style={{
+							width: 200,
+						}}
+						value={searchValue}
+						onSelect={onSelectActivity}
+						onSearch={(value) => setSearchValue(value)}
+						placeholder="Chọn hoạt động"
+					/>
 					<FilterStudent getData={getUser} />
 					<div>
 						<Input.Group compact>
@@ -252,7 +284,7 @@ export default function AdminManageUserByActivity() {
 					</div>
 				</div>
 			</Card>
-			<TableCustom
+			<Table
 				columns={columns}
 				dataSource={users}
 				loading={loading}
@@ -262,32 +294,15 @@ export default function AdminManageUserByActivity() {
 				pagination={false}
 				footer={() => (
 					<div className={styles.itemCenter}>
-						<Button
-							disabled={!activityChoice}
-							onClick={() => changePage(false)}
-						>
+						<Button disabled={!users.length} onClick={() => changePage(false)}>
 							Trang trước
 						</Button>
-						<Button disabled={!activityChoice} onClick={() => changePage(true)}>
+						<Button disabled={!users.length} onClick={() => changePage(true)}>
 							Trang sau
 						</Button>
 					</div>
 				)}
 			/>
-			<Modal
-				visible={showModel}
-				title={'Chọn một hoạt động'}
-				centered={true}
-				onCancel={() => setShowModel(false)}
-				footer={null}
-			>
-				<ChooceActivity
-					activities={activities}
-					setActivityChoice={setActivityChoice}
-					doSearch={getActivities}
-					hasMoreData={hasMoreData}
-				/>
-			</Modal>
 		</Content>
 	);
 }

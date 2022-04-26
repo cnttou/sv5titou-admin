@@ -7,7 +7,7 @@ const { Text, Title } = Typography;
 export const typeFileimage = ['.jpeg', '.jpg', '.png'];
 
 function UserDetail(props) {
-	const { fullName, displayName, studentCode, listData, ...rest } = props;
+	const { fullName, studentCode, ...rest } = props;
 	return (
 		<>
 			<Card

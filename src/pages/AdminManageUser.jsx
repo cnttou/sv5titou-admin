@@ -1,20 +1,22 @@
 import { ExclamationCircleOutlined, ExportOutlined } from '@ant-design/icons';
 import {
-    Button,
-    Card,
-    Layout,
-    message,
-    Modal,
-    Select, Switch,
-    Table
+	Button,
+	Card,
+	Layout,
+	message,
+	Modal,
+	Select,
+	Switch,
+	Table,
 } from 'antd';
 import React, { useRef, useState } from 'react';
 import {
-    getActivitiesById,
-    getUserApi,
-    serializerDoc,
-    updateUserActivityApi,
-    updateUserApi
+	deleteRegisterActivity,
+	getActivitiesById,
+	getUserApi,
+	serializerDoc,
+	updateUserActivityApi,
+	updateUserApi,
 } from '../api/firestore';
 import ActivityFeed from '../components/ActivityFeed';
 import ExportStudent from '../components/ExportStudent';
@@ -22,15 +24,14 @@ import FilterStudent from '../components/FilterStudent';
 import InputSelectWithAddItem from '../components/InputSelectWithAddItem';
 import Loading from '../components/Loading';
 import ShowProofImage from '../components/ShowProofImage';
-import TableCustom from '../components/TableCustom';
 import TagRender from '../components/TagRender';
 import UserDetail from '../components/UserDetail';
 import {
-    nameLevelActivity,
-    nameLevelRegister,
-    nameTarget,
-    optionProof,
-    optionsTargetSuccess
+	nameLevelActivity,
+	nameLevelRegister,
+	nameTarget,
+	optionProof,
+	optionsTargetSuccess,
 } from '../config';
 import styles from '../styles/Admin.module.css';
 
@@ -110,10 +111,16 @@ export default function AdminManageUser() {
 				const newState = userActivity.map((user) => {
 					if (user.id === uid) {
 						const activitiesNew = { ...user.activities };
+						let activityId = [...user.activityId];
 						user.activityId.forEach((id) => {
-							activitiesNew[id].activity = data[id];
+							if (data[id]) activitiesNew[id].activity = data[id];
+							else {
+								delete activitiesNew[id];
+								activityId = activityId.filter((acid) => acid !== id);
+								deleteRegisterActivity(uid, id);
+							}
 						});
-						return { ...user, activities: activitiesNew };
+						return { ...user, activities: activitiesNew, activityId };
 					}
 					return user;
 				});
@@ -289,7 +296,7 @@ export default function AdminManageUser() {
 			})
 			.catch((error) => {
 				message.error('Lỗi tải dữ liệu');
-				console.log(error);
+				console.error(error);
 			})
 			.finally(() => setLoading(false));
 	};
@@ -324,7 +331,7 @@ export default function AdminManageUser() {
 					</Button>
 				</div>
 			</Card>
-			<TableCustom
+			<Table
 				style={{
 					height: 'calc(100vh - 82px - 64px)',
 					overflow: 'scroll',
@@ -346,8 +353,12 @@ export default function AdminManageUser() {
 				pagination={false}
 				footer={() => (
 					<div className={styles.itemCenter}>
-						<Button onClick={() => changePage(false)}>Trang trước</Button>
-						<Button onClick={() => changePage(true)}>Trang sau</Button>
+						<Button disabled={!userActivity.length} onClick={() => changePage(false)}>
+							Trang trước
+						</Button>
+						<Button disabled={!userActivity.length} onClick={() => changePage(true)}>
+							Trang sau
+						</Button>
 					</div>
 				)}
 			/>

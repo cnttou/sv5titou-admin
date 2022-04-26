@@ -19,10 +19,10 @@ const FilterStudent = (props) => {
 	const location = useLocation();
 
 	const onFinish = (fieldsValue) => {
-		let { classUser, levelReview, targetSuccess } = fieldsValue;
+		let { targetSuccess } = fieldsValue;
 		targetSuccess = targetSuccess?.length ? targetSuccess : undefined;
-		saveFilter({ classUser, levelReview, targetSuccess }, location.pathname);
-		props.getData && props.getData({ classUser, levelReview, targetSuccess });
+		saveFilter({ ...fieldsValue, targetSuccess }, location.pathname);
+		props.getData && props.getData({ ...fieldsValue, targetSuccess, studentCode: undefined });
 	};
 
 	const renderSelect = (object = {}) => {
@@ -36,6 +36,8 @@ const FilterStudent = (props) => {
 	useEffect(() => {
 		const data = {
 			classUser: undefined,
+			orderBy: 'lastUpdate',
+			sort: 'asc',
 			levelReview: undefined,
 			targetSuccess: undefined,
 		};
@@ -61,7 +63,11 @@ const FilterStudent = (props) => {
 					<Input placeholder="Tên lớp" />
 				</Form.Item>
 				<Form.Item noStyle name="levelReview">
-					<Select placeholder="Lọc theo cấp xét" style={{ minWidth: 200 }}>
+					<Select
+						allowClear
+						placeholder="Lọc theo cấp xét"
+						style={{ minWidth: 200 }}
+					>
 						{renderSelect(nameLevelRegister)}
 					</Select>
 				</Form.Item>

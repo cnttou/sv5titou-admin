@@ -1,4 +1,4 @@
-import { Card, Form, List, Radio, Space } from 'antd';
+import { Form, List, Radio, Space } from 'antd';
 import Search from 'antd/lib/input/Search';
 import { useRef } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';

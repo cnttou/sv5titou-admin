@@ -13,12 +13,7 @@ const USER = 'users';
 const USER_ACTIVITY = 'user_activity';
 
 export const serializeDoc = (doc) =>
-	doc.exists
-		? {
-				...doc.data(),
-				id: doc.id,
-		  }
-		: {};
+	doc.exists ? { ...doc.data(), id: doc.id } : {};
 
 export const serializerDoc = (querySnapshot) => {
 	let data = [];
@@ -41,21 +36,22 @@ export const serializerDocToObject = (querySnapshot) => {
 	});
 	return data;
 };
-//GET ALL
-export const getAllUserApi = () => db.collection(USER).get();
+
 export const getUserApi = ({
 	classUser,
 	levelReview,
 	targetSuccess,
 	studentCode,
-	orderBy = 'createAt',
+	orderBy = 'lastUpdate',
 	sort = 'asc',
 	next,
 	previous,
 	limit,
+	acid,
 }) => {
 	let ref = db.collection(USER);
-	if (studentCode) ref = ref.where('studentCode', '==', studentCode);
+    if (acid) ref = ref.where('activityId', 'array-contains', acid);
+	if (studentCode) return ref.where('studentCode', '==', studentCode).get();
 	if (levelReview) ref = ref.where('levelReview', '==', levelReview);
 	if (classUser) ref = ref.where('classUser', '==', classUser);
 	if (targetSuccess?.length) {
@@ -81,11 +77,57 @@ export const getUserExportApi = (classUser, levelReview, targetSuccess) => {
 	return ref.get();
 };
 
-export const getAllActivityApi = () => db.collection(ACTIVITY).get();
-export const getActivityApi = () =>
-	db.collection(ACTIVITY).where('active', '==', true).get();
-export const getAllOtherActivityApi = () =>
-	db.collection(ACTIVITY).where('typeActivity', '!=', 'register').get();
+function getCombinations(valuesArray) {
+	var combi = [];
+	var temp = [];
+	var slent = Math.pow(2, valuesArray.length);
+
+	for (var i = 0; i < slent; i++) {
+		temp = [];
+		for (var j = 0; j < valuesArray.length; j++) {
+			if (i & Math.pow(2, j)) {
+				temp.push(valuesArray[j]);
+			}
+		}
+		if (temp.length > 0) {
+			combi.push(temp);
+		}
+	}
+
+	combi.sort((a, b) => a.length - b.length);
+	console.log(combi.join('\n'));
+	return combi;
+}
+
+export const textIndexApi = () => {
+	const initTest = {
+		active: 'true',
+		typeActivity: 'register',
+		date: '20-12-2022',
+		department: 'cntt',
+		level: 'lop',
+		target: ['hoc-tap'],
+	};
+	const combination = getCombinations([
+		'department',
+		'level',
+		'target',
+	]);
+	combination.forEach((arr) => {
+		const params = { ...initTest };
+		Object.keys(params).forEach((key) => {
+			if (!arr.includes(key)) params[key] = undefined;
+		});
+		console.info(params);
+		getAllRegisterActivityApi({
+			...params,
+			limit: 1,
+			orderBy: 'createAt',
+			sort: 'asc',
+		}).catch((error) => console.error(error));
+	});
+};
+
 export const getAllRegisterActivityApi = ({
 	active,
 	typeActivity,
@@ -94,7 +136,7 @@ export const getAllRegisterActivityApi = ({
 	level,
 	nameSearch,
 	target,
-	orderBy = 'createAt',
+	orderBy = 'lastUpdate',
 	sort = 'asc',
 	previous,
 	next,
@@ -126,21 +168,9 @@ export const getAllRegisterActivityApi = ({
 };
 export const getAllUserActivityApi = () => db.collection(USER_ACTIVITY).get();
 
-//GET WITH WHERE
-export const getUserByIds = (ids = []) =>
-	db.collection(USER).where(documentId(), 'in', ids).get();
-
-export const getActivityByIds = (ids = []) =>
-	db.collection(ACTIVITY).where(documentId(), 'in', ids).get();
-// export const getUserActivityByUids = (uids = []) =>
-// 	db.collection(USER_ACTIVITY).where('uid', 'in', uids).get();
-// export const getUserActivityByAcIds = (acIds = []) =>
-// 	db.collection(USER_ACTIVITY).where('acId', 'in', acIds).get();
-//ADD
 export const addActivityApi = (id, data) =>
 	db.collection(ACTIVITY).doc(id).set(data);
 
-//UPDATE
 export const updateActivityApi = (id, data) =>
 	db.collection(ACTIVITY).doc(id).update(data);
 export const updateUserApi = (id, data) =>
@@ -154,12 +184,9 @@ export const updateUserActivityApi = (id, uid, data) => {
 	});
 };
 
-//DELETE
 export const deleteActivityApi = (id) => {
 	return db.collection(ACTIVITY).doc(id).delete();
 };
-export const deleteUserApi = (id) => db.collection(USER).doc(id).delete();
-
 export const getActivitiesById = (listId) => {
 	const sliceIds = [];
 	for (let i = 0; i < listId.length; i = i + 10) {
@@ -173,11 +200,23 @@ export const getActivitiesById = (listId) => {
 		const kq = {};
 		responses.forEach((res) => {
 			res.forEach((doc) => {
-				kq[doc.id] = serializeDoc(doc);
+				if (doc.exists) {
+					kq[doc.id] = serializeDoc(doc);
+				}
 			});
 		});
 		return kq;
 	});
+};
+
+export const deleteRegisterActivity = (uid, id) => {
+	return db
+		.doc(`${USER}/${uid}`)
+		.update({
+			activityId: arrayRemove(id),
+			[`activities.${id}`]: FieldValue.delete(),
+		})
+		.then(() => ({ id }));
 };
 
 export const getSlideShowApi = () => {
@@ -265,8 +304,8 @@ export const deleteActivityOfUserByIdApi = (acId = '') => {
 				deleteProofImage(user.id, acId);
 				promises.push(
 					user.ref.update({
-						[`activities.${acId}`]: firebase.firestore.FieldValue.delete(),
-						activityId: firebase.firestore.FieldValue.arrayRemove(acId),
+						[`activities.${acId}`]: FieldValue.delete(),
+						activityId: arrayRemove(acId),
 					})
 				);
 			});
@@ -276,50 +315,4 @@ export const deleteActivityOfUserByIdApi = (acId = '') => {
 			console.log('DONE delete activity by Id');
 		})
 		.catch((error) => console.log(error.message));
-};
-export const cleanRegisterAcitiviyExpectMe = () => {
-	return db
-		.collection('register_activity')
-		.get()
-		.then((querySnapshot) => {
-			querySnapshot.forEach((doc) => {
-				if (doc.id !== 'oVO9xn7se5b7AHr8lurFIHWpsg83')
-					doc.ref.delete().then(() => console.log('deleted id: ', doc.id));
-			});
-		});
-};
-export const getAllDataApi = async () => {
-	const users = await db
-		.collection('register_activity')
-		.get()
-		.then((querySnapshot) => {
-			const kq = {};
-			querySnapshot.forEach((doc) => {
-				kq[doc.id] = { ...doc.data(), id: doc.id };
-			});
-			return kq;
-		});
-	const activities = await db
-		.collection('news')
-		.get()
-		.then((querySnapshot) => {
-			const kq = {};
-			querySnapshot.forEach((doc) => {
-				kq[doc.id] = { ...doc.data(), id: doc.id };
-			});
-			return kq;
-		});
-
-	Object.entries(users).forEach(([uid, user]) => {
-		Object.entries(user.activities).forEach(([acid, activity]) => {
-			users[uid].activities[acid] = { ...activity, ...activities[acid] };
-		});
-	});
-	Object.keys(activities).forEach((acid) => {
-		activities[acid].users = Object.values(users).filter((user) =>
-			user.activityId.includes(acid)
-		);
-	});
-
-	return { users, activities };
 };

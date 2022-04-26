@@ -2,7 +2,7 @@ import { Layout } from 'antd';
 
 const { Footer } = Layout;
 
-function FooterContent(props) {
+function FooterContent() {
 	return (
 		<Footer style={styles.footer}>
 			Copyright © 2021 Trường Đại học Mở Thành Phố Hồ Chí Minh

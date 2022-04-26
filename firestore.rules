@@ -14,17 +14,16 @@ service cloud.firestore {
     }
     //add data at the first time
     function isInitData(){
-    	return request.resource.data.diff(resource.data).addedKeys().size() != 0;
+    	return request.resource.data.diff(resource.data).changedKeys().size() == 0;
     }
 		function isUpdateConfirmTrue(){
-    	let acid = request.resource.data.activities.diff(resource.data.activities).affectedKeys();
-    	return acid.size() == 1 && resource.data.activities.get(acid[0], '').confirm == true;
+    	return request.resource.data.diff(resource.data).affectedKeys().hasAny(['confirm']);
     }
     function emptyTargetSuccess(){
-        return request.resource.data.targetSuccess == [];
+        return resource.data.targetSuccess == [] && resource.data.confirm == [];
     }
     
-    match /news/{idDoc} {
+    match /activities/{idDoc} {
       allow read;
       allow write: if isAdmin();
     }
@@ -32,10 +31,8 @@ service cloud.firestore {
       allow list;
       allow read, write: if isAdmin();
     }
-    match /register_activity/{userId} {
-    	allow create: if isUser(userId) && request.resource.data.targetSuccess == [];
-      //only update when user is login, targetSuccess = [] or studentCode and fullName not before, 
-      //or not update confirm = true
+    match /users/{userId} {
+    	allow create: if isUser(userId) && emptyTargetSuccess();
       allow update: if isUser(userId) && !isUpdateConfirmTrue()
       	&& (emptyTargetSuccess() || !emptyTargetSuccess() && !isUpdateFullName() || isInitData())
       allow get: if isUser(userId);
