@@ -1,7 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, Layout, Image } from 'antd';
 import {
-	AppstoreAddOutlined,
 	AppstoreOutlined,
 	AuditOutlined,
 	BulbOutlined,
@@ -46,20 +45,9 @@ export default function HeaderUser() {
 						Hoạt động
 					</Link>
 				</Menu.Item>
-				<Menu.Item
-					key="admin-manage-other-activity"
-					icon={<AppstoreAddOutlined />}
-				>
-					<Link
-						to="/admin-manage-other-activity"
-						className={styles.itemText}
-					>
-						Hoạt động khác
-					</Link>
-				</Menu.Item>
 				<Menu.Item key="admin-manage-slide" icon={<BulbOutlined />}>
 					<Link to="/admin-manage-slide" className={styles.itemText}>
-						Quảng cáo
+						Thông báo
 					</Link>
 				</Menu.Item>
 				<Menu.Item key="admin-manage-user" icon={<AuditOutlined />}>

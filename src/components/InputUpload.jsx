@@ -1,4 +1,4 @@
-import { Upload, Button, Progress } from 'antd';
+import { Upload, Button, Progress, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { taskEvent, upFileApi } from '../api/firebaseStorage';
 import { useState } from 'react';
@@ -45,9 +45,7 @@ function InputUpload({ text, id, ...props }) {
 					compressedFile instanceof Blob
 				); // true
 				console.log(
-					`compressedFile size ${
-						compressedFile.size / 1024 / 1024
-					} MB`
+					`compressedFile size ${compressedFile.size / 1024 / 1024} MB`
 				); // smaller than maxSizeMB
 
 				return compressedFile;
@@ -78,7 +76,7 @@ function InputUpload({ text, id, ...props }) {
 				setState('onUploadStart', false);
 			}
 		);
-        if (props.handleUpload)
+		if (props.handleUpload)
 			task.then((snapshot) => {
 				snapshot.ref.getDownloadURL().then((url) => {
 					props.handleUpload(url);

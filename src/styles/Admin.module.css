@@ -12,6 +12,20 @@
 	display: flex;
 	margin-bottom: 5px;
 }
+.itemCenter {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+.itemBetween {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.mt {
+    margin-top: 1rem;
+}
 @media only screen and (max-width: 750px) {
 	.search {
 		padding: 0;

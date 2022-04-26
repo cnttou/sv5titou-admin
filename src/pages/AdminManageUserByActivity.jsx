@@ -1,292 +1,96 @@
-import { useEffect, useState } from 'react';
-import Loading from '../components/Loading';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 import {
-	Layout,
-	Button,
-	Space,
-	Input,
-	message,
-	Modal,
-	Image,
-	Typography,
+    Button,
+    Card,
+    Input,
+    Layout,
+    message,
+    Modal, Typography
 } from 'antd';
-import styles from '../styles/Admin.module.css';
-import InputSelectWithAddItem from '../components/InputSelectWithAddItem';
-import { nameLevelActivity, nameTarget, nameTypeActivity } from '../config';
-import TableCustom from '../components/TableCustom';
-import ActivityFeed, { checkFileImage } from '../components/ActivityFeed';
-import { ExclamationCircleOutlined, PaperClipOutlined } from '@ant-design/icons';
+import { useRef, useState } from 'react';
 import {
-	getActivityApi,
-	getUserActivityByAcIds,
-	getUserByIds,
-	serializerDoc,
-	serializerDocToObject,
-	updateUserActivityApi,
+    getAllRegisterActivityApi,
+    getUserApi,
+    serializerDoc,
+    updateUserActivityApi
 } from '../api/firestore';
-import UserDetail from '../components/UserDetail';
+import ChooceActivity from '../components/ChooceActivity';
+import FilterStudent from '../components/FilterStudent';
+import InputSelectWithAddItem from '../components/InputSelectWithAddItem';
+import ShowProofImage from '../components/ShowProofImage';
+import TableCustom from '../components/TableCustom';
+import { optionProof } from '../config';
+import styles from '../styles/Admin.module.css';
 
 const { Text } = Typography;
 const { Content } = Layout;
 const { confirm } = Modal;
 
-const filterConfirm = [
-	{
-		text: 'Đã xác nhận',
-		value: 'true',
-	},
-	{
-		text: 'Chưa xác nhận',
-		value: 'false',
-	},
-	{
-		text: 'MC không hợp lệ',
-		value: 'cancel',
-	},
-	{
-		text: 'Chưa thêm minh chứng',
-		value: 'notproof',
-	},
-];
-
-const option = [
-	{
-		key: 'false',
-		label: 'Chưa xác nhận',
-		style: {
-			backgroundColor: 'white',
-		},
-	},
-	{
-		key: 'true',
-		label: 'Đã xác nhận',
-		style: {
-			backgroundColor: '#95de64',
-		},
-	},
-	{
-		key: 'Minh chứng không hợp lệ',
-		label: 'Minh chứng không hợp lệ',
-		style: {
-			backgroundColor: '#ff7875',
-		},
-	},
-];
-
 export default function AdminManageUserByActivity() {
-	const [inputStudentCode, setInputStudentCode] = useState('');
+	const [users, setUsers] = useState([]);
+	const [activityChoice, setActivityChoice] = useState();
 	const [activities, setActivities] = useState([]);
 	const [loading, setLoading] = useState(false);
-	const [showUserModel, setShowUserModel] = useState(false);
-	const [showActivityModel, setShowActivityModel] = useState(false);
-	const [dataModel, setDataModel] = useState(null);
+	const [showModel, setShowModel] = useState(false);
+	const inputStudentCode = useRef([]);
+	const [hasMoreData, setHasMoreData] = useState(false);
+	const filterValueRef = useRef({});
 
-	useEffect(async () => {
-		setLoading(true);
-		getActivityApi()
-			.then(serializerDoc)
-			.then((data) => {
-				setActivities(data);
-				setLoading(false);
-				const acIds = data.map((c) => c.id);
-				if (acIds.length > 10) acIds.length = 10;
-				return acIds;
-			})
-			.then((acIds) => {
-				getMoreUserDetail(acIds);
-			})
-			.catch(() => {
-				message.error('Không thể tải dữ liệu vui lòng thử lại');
-			});
-	}, []);
-
-	useEffect(() => {
-		console.log(activities);
-	}, [activities]);
-
-	const handleConfirmActivity = (user, confirm) => {
+	const handleConfirmActivity = (id, uid, confirm) => {
 		let data = {};
 		if (confirm === 'true') data = { confirm: true };
 		else if (confirm === 'false') data = { confirm: false };
-		else data = { confirm };
-		return updateUserActivityApi(user.id, data)
+		else data = { confirm: false, reason: confirm };
+		return updateUserActivityApi(id, uid, data)
 			.then(() => {
 				message.success('Cập nhật thành công');
-				setActivities((preState) =>
-					preState.map((activity) =>
-						activity.id === user.acId
-							? {
-									...activity,
-									users: activity.users.map((u) =>
-										u.uid === user.uid
-											? { ...u, ...data }
-											: u
-									),
-							  }
-							: activity
-					)
-				);
+				const newState = users.map((user) => {
+					if (user.id === uid) {
+						const newConfirm = data.confirm
+							? user.confirm.concat(id)
+							: user.confirm.filter((i) => i !== id);
+
+						const activitiesNew = { ...user.activities };
+						user.activityId.forEach((acid) => {
+							if (acid === id) activitiesNew[acid].reason = data.reason || '';
+						});
+						return {
+							...user,
+							confirm: newConfirm,
+							activities: activitiesNew,
+						};
+					}
+					return user;
+				});
+				setUsers(newState);
 			})
 			.catch(() => {
 				message.error('Cập nhật thất bại, vui lòng thử lại');
 			});
 	};
 
-	const handleClickNameUser = (item) => {
-		setDataModel(item);
-		setShowUserModel(true);
-	};
-
-    const showBoxQuestion = (user, key) => {
+	const showBoxQuestion = (id, uid, key) => {
 		confirm({
 			title: 'Bạn có chắc muốn xác nhận hoạt động?',
 			icon: <ExclamationCircleOutlined />,
-			content:
-				'Hoạt động này KHÔNG có minh chứng',
+			content: 'Hoạt động này KHÔNG có minh chứng',
 			onOk() {
-				return handleConfirmActivity(user, key);
+				return handleConfirmActivity(id, uid, key);
 			},
 			onCancel() {},
 		});
 	};
 
-	const expandedRowRender = (activity, index) => {
-		const columns = [
-			{
-				title: 'Tên',
-				key: 'displayName',
-				render: (item) => (
-					<Button
-						type="link"
-						onClick={() => handleClickNameUser(item)}
-					>
-						{item.fullName || item.displayName}
-					</Button>
-				),
-			},
-			{
-				title: 'Email',
-				key: 'email',
-				searchFilter: true,
-				dataIndex: 'email',
-			},
-			{
-				title: 'Mssv',
-				key: 'studentCode',
-				searchFilter: true,
-				dataIndex: 'studentCode',
-			},
-			{
-				title: 'Minh chứng',
-				key: 'proof',
-				render: (item) =>
-					item.proof && Object.values(item.proof)?.length ? (
-						<Space
-							style={{ maxWidth: 350, overflowX: 'auto' }}
-							direction="horizontal"
-						>
-							{Object.values(item.proof).map((file) => (
-								<div key={file.name}>
-									{checkFileImage(file.typeFile) ? (
-										<>
-											<Image
-												height={80}
-												width={130}
-												style={{ objectFit: 'cover' }}
-												alt={file.name}
-												src={file.url}
-											/>
-										</>
-									) : (
-										<div key={file.name}>
-											<Button
-												icon={<PaperClipOutlined />}
-												type="link"
-												block
-											>
-												<a
-													target="_blank"
-													href={file.url}
-												>
-													{`${file.name}`}
-												</a>
-											</Button>
-										</div>
-									)}
-									<p
-										style={{
-											textAlign: 'center',
-											margin: 0,
-										}}
-									>
-										{nameTarget[file.target]}
-									</p>
-								</div>
-							))}
-						</Space>
-					) : (
-						'Không có'
-					),
-			},
-			{
-				title: 'Trạng thái',
-				key: 'confirm',
-				filters: filterConfirm,
-				onFilter: (value, record) => {
-					if (value === 'notproof') return record.proof === 0;
-					else if (value === 'cancel')
-						return record.confirm.toString().length > 5;
-					else if (value === 'false')
-						return record.confirm === false && record.proof !== 0;
-					else if (value === 'true') return record.confirm === true;
-				},
-				defaultFilteredValue: [],
-				render: (user) => {
-					return (
-						<InputSelectWithAddItem
-							value={user.confirm.toString()}
-							option={option}
-							setValue={(key) =>
-								Object.values(user.proof || {}).length
-									? handleConfirmActivity(user, key)
-									: showBoxQuestion(user, key)
-							}
-							style={{
-								width: '100%',
-								maxWidth: 250,
-							}}
-						/>
-					);
-				},
-			},
-		];
-
-		return (
-			<>
-				{activity.users ? (
-					<TableCustom
-						columns={columns}
-						dataSource={activity.users.map((user, key) => ({
-							...user,
-							key,
-						}))}
-						size="small"
-						pagination={false}
-					/>
-				) : null}
-			</>
-		);
-	};
-	const handleConfirmByListStudentCode = (activity) => {
-		const listStudentCode = inputStudentCode
+	const handleConfirmByListStudentCode = () => {
+		const listStudentCode = inputStudentCode.current
 			.split(/[,. -]+/)
 			.filter((c) => c.length === 10 && parseInt(c));
 
-		const listUser = activity.users.filter(
+		const listUser = activityChoice.users.filter(
 			(user) =>
 				listStudentCode.includes(user.studentCode) &&
-				user.activities[activity.id].proof >= 1 &&
-				user.activities[activity.id].confirm === false
+				user.activities[activityChoice.id].proof >= 1 &&
+				user.activities[activityChoice.id].confirm === false
 		);
 		const listUserId = listUser.map((c) => c.id);
 
@@ -310,163 +114,179 @@ export default function AdminManageUserByActivity() {
 			onOk() {
 				return Promise.all(
 					listUserId.map((uid) =>
-						handleConfirmActivity(uid, activity.id, true)
+						handleConfirmActivity(uid, activityChoice.id, true)
 					)
 				);
 			},
-			onCancel() {
-				console.log('Cancel');
-			},
 		});
-
-		console.log(listUserId);
 	};
+
+	const changePage = (isNextPage) => {
+		const data = {
+			...filterValueRef.current,
+			previous: undefined,
+			next: undefined,
+		};
+		if (isNextPage) data.next = activities[activities.length - 1];
+		else data.previous = activities[0];
+		getUser(data);
+	};
+
+	const getUser = (dataFilter) => {
+		setLoading(true);
+		filterValueRef.current = dataFilter;
+		return getUserApi(dataFilter)
+			.then(serializerDoc)
+			.then((data) => {
+				if (!data.length) {
+					message.warning('Không có dữ liệu');
+					return;
+				}
+				setUsers(data);
+			})
+			.catch((error) => {
+				message.error('Lỗi tải dữ liệu');
+				console.log(error);
+			})
+			.finally(() => setLoading(false));
+	};
+
+	const getActivities = (dataFilter, nextPage = false) => {
+		setLoading(true);
+		if (nextPage) dataFilter.next = activities[activities.length - 1];
+		else setHasMoreData(true);
+		return getAllRegisterActivityApi(dataFilter)
+			.then(serializerDoc)
+			.then((data) => {
+				if (!data.length) {
+					setHasMoreData(false);
+					return;
+				}
+				setActivities(data);
+			})
+			.catch((error) => {
+				message.error('Lỗi tải dữ liệu');
+				setHasMoreData(false);
+				console.log(error);
+			})
+			.finally(() => setLoading(false));
+	};
+
 	const columns = [
 		{
-			title: 'Loại hoạt động',
-			dataIndex: 'typeActivity',
-			key: 'typeActivity',
-			filters: Object.entries(nameTypeActivity).map((c) => ({
-				value: c[0],
-				text: c[1],
-			})),
-			onFilter: (value, record) => record.typeActivity === value,
-			render: (text) => nameTypeActivity[text],
+			title: 'Tên',
+			key: 'displayName',
+			render: (user) => user.fullName || user.displayName,
 		},
 		{
-			title: 'Tên hoạt động',
-			key: 'name',
-			dataIndex: 'name',
-			searchFilter: true,
+			title: 'Email',
+			key: 'email',
+			dataIndex: 'email',
 		},
 		{
-			title: 'Cấp hoạt động',
-			dataIndex: 'level',
-			filters: Object.entries(nameLevelActivity).map((c) => ({
-				text: c[1],
-				value: c[0],
-			})),
-			onFilter: (value, record) => record.level === value,
-			key: 'level',
-			render: (text) => nameLevelActivity[text] || '---',
+			title: 'Mssv',
+			key: 'studentCode',
+			dataIndex: 'studentCode',
 		},
 		{
-			title: 'Tiêu chí',
-			key: 'target',
-			filters: Object.entries(nameTarget).map((c) => ({
-				value: c[0],
-				text: c[1],
-			})),
-			onFilter: (value, record) => record.target.includes(value),
-			render: (text) => text.target.map((c) => nameTarget[c]).join(', '),
+			title: 'Minh chứng',
+			key: 'proof',
+			render: (user) => {
+				return Object.values(user.activities[activityChoice.id].proof)
+					?.length ? (
+					<ShowProofImage proof={user.activities[activityChoice.id].proof} />
+				) : (
+					'Không có'
+				);
+			},
 		},
 		{
-			title: 'Ngày diễn ra',
-			key: 'date',
-			render: (text) => text.date || '---',
-		},
-		{
-			title: 'Xác nhận bằng danh sách MSSV',
-			key: 'action',
-			render: (text, record) =>
-				record?.users?.length ? (
-					<Space direction="horizontal">
-						<Input
-							onChange={(e) =>
-								setInputStudentCode(e.target.value)
-							}
-						/>
-
-						<Button
-							onClick={() =>
-								handleConfirmByListStudentCode(record)
-							}
-						>
-							Thêm
-						</Button>
-					</Space>
-				) : null,
+			title: 'Trạng thái',
+			key: 'confirm',
+			render: (user) => {
+				const activity = user.activities[activityChoice.id];
+				return (
+					<InputSelectWithAddItem
+						value={
+							activity.reason ||
+							user.confirm.includes(activityChoice.id).toString()
+						}
+						option={optionProof}
+						setValue={(key) =>
+							Object.values(activity.proof || {}).length
+								? handleConfirmActivity(activityChoice.id, user.id, key)
+								: showBoxQuestion(activityChoice.id, user.id, key)
+						}
+						style={{
+							width: '100%',
+							maxWidth: 250,
+						}}
+					/>
+				);
+			},
 		},
 	];
 
-	const getMoreUserDetail = async (acIds) => {
-		setLoading(true);
-		let userActivities = await getUserActivityByAcIds(acIds).then(
-			serializerDoc
-		);
-
-		let uids = userActivities.map((c) => c.uid);
-		uids = [...new Set(uids)];
-
-		if (!uids.length) return setLoading(false);
-		const users = await getUserByIds(uids).then(serializerDocToObject);
-
-		userActivities = userActivities
-			.map((c) => ({
-				...users[c.uid],
-				...c,
-			}))
-			.filter((c) => c.displayName && c.proof);
-		setActivities((preState) =>
-			preState.map((activity) => ({
-				...activity,
-				users: userActivities.filter(
-					(mapUserAc) => mapUserAc.acId === activity.id
-				),
-			}))
-		);
-		setLoading(false);
-	};
-	const onChangeTable = (
-		{ current, pageSize },
-		filters,
-		sorter,
-		{ currentDataSource, action }
-	) => {
-		if (action !== 'paginate') return;
-		const start = (current - 1) * pageSize;
-		const end = start + pageSize;
-		getMoreUserDetail(currentDataSource.slice(start, end).map((c) => c.id));
-	};
-
 	return (
 		<Content className={styles.contentAdminManageUser}>
+			<Card style={{ width: '100vw' }} size="small">
+				<div className={styles.itemBetween}>
+					<Button type="primary" onClick={() => setShowModel(true)}>
+						Chọn hoạt động
+					</Button>
+					<FilterStudent getData={getUser} />
+					<div>
+						<Input.Group compact>
+							<Input
+								style={{ width: '250px' }}
+								placeholder="Danh sách MSSV để xác nhận"
+							/>
+							<Button
+								type="primary"
+								disabled={!activityChoice}
+								onClick={handleConfirmByListStudentCode}
+							>
+								Xác nhận tất cả
+							</Button>
+						</Input.Group>
+					</div>
+				</div>
+			</Card>
 			<TableCustom
 				columns={columns}
-				expandable={{
-					expandedRowRender,
-					rowExpandable: (activity) => activity?.users?.length,
-				}}
-				dataSource={activities}
+				dataSource={users}
 				loading={loading}
 				rowKey={(record) => record.id}
 				rowClassName="rowTable"
 				size="middle"
-				pagination={{ position: ['topCenter'] }}
-				onChange={onChangeTable}
+				pagination={false}
+				footer={() => (
+					<div className={styles.itemCenter}>
+						<Button
+							disabled={!activityChoice}
+							onClick={() => changePage(false)}
+						>
+							Trang trước
+						</Button>
+						<Button disabled={!activityChoice} onClick={() => changePage(true)}>
+							Trang sau
+						</Button>
+					</div>
+				)}
 			/>
 			<Modal
-				visible={showUserModel || showActivityModel}
-				title={
-					showUserModel ? 'Chi tiết sinh viên' : 'Chi tiết hoạt động'
-				}
+				visible={showModel}
+				title={'Chọn một hoạt động'}
 				centered={true}
-				onCancel={() => {
-					setShowUserModel(false);
-					setShowActivityModel(false);
-				}}
+				onCancel={() => setShowModel(false)}
 				footer={null}
 			>
-				{showUserModel && <UserDetail {...dataModel} />}
-				{showActivityModel && (
-					<ActivityFeed
-						{...dataModel}
-						canRemoveProof={true}
-						showFull={true}
-						btnDetail={false}
-						loading={false}
-					/>
-				)}
+				<ChooceActivity
+					activities={activities}
+					setActivityChoice={setActivityChoice}
+					doSearch={getActivities}
+					hasMoreData={hasMoreData}
+				/>
 			</Modal>
 		</Content>
 	);

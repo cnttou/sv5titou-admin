@@ -1,7 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { addDataApi, deleteDataApi, getSlideShowApi, getAllDataApi } from '../../api/firestore';
-import firebase from '../../api/firebase';
-const { Timestamp } = firebase.firestore;
 
 
 export * from './userAction';

@@ -31,7 +31,7 @@ export const deleteActivityAction = createAsyncThunk(
 
 export const getImageProofByActivityAction = createAsyncThunk(
 	'registerActivity/getImageProofByActivityAction',
-	async (acId, thunkAPI) => {
+	async (acId) => {
 		let response = await getFileFromAActivityApi(acId);
 		return { images: response, acId };
 	}

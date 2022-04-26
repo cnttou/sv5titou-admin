@@ -5,10 +5,77 @@ export const nameLevelActivity = {
 	tp: 'Cấp thành phố',
 	qg: 'Cấp quốc gia',
 };
+
+export const nameFilterProof = [
+	{
+		text: 'Đã xác nhận',
+		value: 'true',
+	},
+	{
+		text: 'Chưa xác nhận',
+		value: 'false',
+	},
+	{
+		text: 'MC không hợp lệ',
+		value: 'cancel',
+	},
+	{
+		text: 'Chưa thêm minh chứng',
+		value: 'notproof',
+	},
+];
+
+export const nameFilterActive = [
+	{
+		text: 'Chưa kích hoạt',
+		value: 'false',
+	},
+	{
+		text: 'Đã kích hoạt',
+		value: 'true',
+	},
+];
+
+export const typeFileimage = ['jpeg', 'jpg', 'png'];
+
 export const nameLevelRegister = {
 	'xet-cap-khoa': 'Xét cấp khoa',
 	'xet-cap-truong': 'Xét cấp trường',
 };
+
+export const optionsTargetSuccess = [
+	{ value: 'hoc-tap', label: 'Học tập', color: '#ff9c6e' },
+	{ value: 'tinh-nguyen', label: 'Tình nguyện', color: '#ffc53d' },
+	{ value: 'the-luc', label: 'Thể lực', color: '#bae637' },
+	{ value: 'dao-duc', label: 'Đạo đức', color: '#f759ab' },
+	{ value: 'hoi-nhap', label: 'Hội nhập', color: '#40a9ff' },
+	{ value: 'none', label: 'Chưa hoàn thành cái nào', color: '#722ed1' },
+];
+
+export const optionProof = [
+	{
+		key: 'false',
+		label: 'Chưa xác nhận',
+		style: {
+			backgroundColor: 'white',
+		},
+	},
+	{
+		key: 'true',
+		label: 'Đã xác nhận',
+		style: {
+			backgroundColor: '#95de64',
+		},
+	},
+	{
+		key: 'Minh chứng không hợp lệ',
+		label: 'Minh chứng không hợp lệ',
+		style: {
+			backgroundColor: '#ff7875',
+		},
+	},
+];
+
 export const nameSex = {
 	male: 'Nam',
 	female: 'Nữ',
@@ -40,7 +107,8 @@ export const fieldPersonal = {
 	},
 	pointTraining: { label: 'Điểm rèn luyện' },
 	requireDaoDuc: {
-		label: 'Các Tiêu chuẩn đạo đức bắt buộc (Bảng điểm rèn luyện, 6 bài lý luận chính trị)',
+		label:
+			'Các Tiêu chuẩn đạo đức bắt buộc (Bảng điểm rèn luyện, 6 bài lý luận chính trị)',
 	},
 	otherDaoDuc: {
 		label: 'Các Tiêu chuẩn đạo đức khác',
@@ -77,12 +145,12 @@ export const fieldPersonal = {
 };
 
 export const optionsTagTarget = [
-    { value: 'hoc-tap', label: 'Học tập', color: '#ff9c6e' },
-    { value: 'tinh-nguyen', label: 'Tình nguyện', color: '#ffc53d' },
-    { value: 'the-luc', label: 'Thể lực', color: '#bae637' },
-    { value: 'dao-duc', label: 'Đạo đức', color: '#f759ab' },
-    { value: 'hoi-nhap', label: 'Hội nhập', color: '#40a9ff' },
-    { value: 'none', label: 'Chưa hoàn thành cái nào', color: '#722ed1' },
+	{ value: 'hoc-tap', label: 'Học tập', color: '#ff9c6e' },
+	{ value: 'tinh-nguyen', label: 'Tình nguyện', color: '#ffc53d' },
+	{ value: 'the-luc', label: 'Thể lực', color: '#bae637' },
+	{ value: 'dao-duc', label: 'Đạo đức', color: '#f759ab' },
+	{ value: 'hoi-nhap', label: 'Hội nhập', color: '#40a9ff' },
+	{ value: 'none', label: 'Chưa hoàn thành cái nào', color: '#722ed1' },
 ];
 
 export const nameDepartmentActivity = {
@@ -98,6 +166,17 @@ export const nameDepartmentActivity = {
 	xcd: 'Xã Hội Học - Công Tác Xã Hội - Đông Nam Á',
 	xd: 'Xây Dựng.',
 };
+
+export const nameOtherBy = {
+	createAt: 'Ngày tạo',
+	lastUpdate: 'Mới cập nhật',
+};
+
+export const nameTypeSort = {
+	desc: 'Gần nhất',
+	asc: 'Xa nhất',
+};
+
 export const nameTarget = {
 	'hoi-nhap': 'Hội nhập tốt',
 	'hoc-tap': 'Học tập tốt',

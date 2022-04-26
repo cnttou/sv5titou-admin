@@ -44,9 +44,8 @@ export default function AdminManageSlide() {
 	};
 
 	const handleDelete = (item) => {
-		console.log('clicked delete activity', item);
 		confirm({
-			title: 'Bạn có chắc muốn xóa hoạt động?',
+			title: 'Bạn có chắc muốn xóa thông báo?',
 			icon: <ExclamationCircleOutlined />,
 			content: item.name,
 			onOk() {
@@ -57,7 +56,7 @@ export default function AdminManageSlide() {
 	};
 
 	const { ui, setVisible, setDataModel } = useCreateEditSlideShowModel({
-		title: 'Tạo hoặc chỉnh sửa hoạt động',
+		title: 'Tạo hoặc chỉnh sửa thông báo',
 	});
 	const columns = [
 		{
@@ -114,7 +113,7 @@ export default function AdminManageSlide() {
 			scroll={{ y: 'calc(100vh - 200px)' }}
 			footer={() => (
 				<Button type="primary" block onClick={handleShowModelToAddNew}>
-					Thêm hoạt động
+					Thêm thông báo
 				</Button>
 			)}
 		/>

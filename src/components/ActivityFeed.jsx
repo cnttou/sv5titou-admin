@@ -9,15 +9,10 @@ import { lazy } from 'react';
 const ReactQuill = lazy(() => import('react-quill'));
 import styles from '../styles/ActivityFeed.module.css';
 import Loading from './Loading';
-import { nameLevelActivity, nameTarget } from '../config';
+import { nameLevelActivity, nameTarget, typeFileimage } from '../config';
 
 const { Text, Title } = Typography;
 
-export const typeFileimage = ['jpeg', 'jpg', 'png'];
-
-export const checkFileImage = (type) => {
-	return typeFileimage.includes(type);
-};
 function ActivityFeed(props) {
 	const {
 		loading,
@@ -26,8 +21,6 @@ function ActivityFeed(props) {
 		handleRemoveImage,
 		hoverable,
 		bordered,
-		btnDetail,
-		colorCard,
 		...data
 	} = props;
 	const {
@@ -38,9 +31,7 @@ function ActivityFeed(props) {
 		summary,
 		name,
 		id,
-		proof,
 		images,
-		confirm,
 		level,
 	} = data;
 	const handleClick = () => {
@@ -52,9 +43,7 @@ function ActivityFeed(props) {
 				hoverable={hoverable || false}
 				bordered={bordered || false}
 				className={styles.card}
-				style={
-					showFull ? { maxHeight: '75vh' } : null
-				}
+				style={showFull ? { maxHeight: '75vh' } : null}
 				title={
 					<>
 						<Title level={5}>{name}</Title>
@@ -65,7 +54,7 @@ function ActivityFeed(props) {
 					showFull && (
 						<Text
 							copyable={{
-								text: `https://sv5titou.web.app/news/${id}`,
+								text: `${window.location.host}/news/${id}`,
 							}}
 						>
 							<LinkOutlined />
@@ -133,7 +122,7 @@ export const ShowProof = ({ images, handleRemoveImage }) => (
 							<List.Item.Meta
 								icon={<PaperClipOutlined />}
 								title={
-									<a target="_blank" href={item.url}>
+									<a target="_blank" rel="noreferrer" href={item.url}>
 										{item.name}
 									</a>
 								}
@@ -174,9 +163,7 @@ export const ShowProof = ({ images, handleRemoveImage }) => (
 							height={115}
 							src={image.url}
 						/>
-						<p style={{ textAlign: 'center' }}>
-							{nameTarget[image.target]}
-						</p>
+						<p style={{ textAlign: 'center' }}>{nameTarget[image.target]}</p>
 						{handleRemoveImage && (
 							<Button
 								style={{

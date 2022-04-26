@@ -2,11 +2,10 @@ import { lazy } from 'react';
 import AdminManageSlide from '../pages/AdminManageSlide';
 
 const AdminManageUserByActivity = lazy(() => import('../pages/AdminManageUserByActivity'));
-const AdminManageOtherActivity = lazy(() => import('../pages/AdminManageOtherActivity'));
 const LoginAdmin = lazy(() => import('../pages/LoginAdmin'));
 const PageNotFound = lazy(() => import('../pages/PageNotFound'));
 const AdminManageUser = lazy(() => import('../pages/AdminManageUser'));
-const AdminManageNews = lazy(() => import('../pages/AdminManageNews'));
+const AdminManageActivity = lazy(() => import('../pages/AdminManageActivity'));
 
 const routes = [
 	{
@@ -17,13 +16,7 @@ const routes = [
 	},
 	{
 		path: '/admin',
-		component: AdminManageNews,
-		exact: true,
-		private: true,
-	},
-	{
-		path: '/admin-manage-other-activity',
-		component: AdminManageOtherActivity,
+		component: AdminManageActivity,
 		exact: true,
 		private: true,
 	},

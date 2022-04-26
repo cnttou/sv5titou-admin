@@ -1,97 +1,153 @@
 import { FilterOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Button, Card, Select, Space } from 'antd';
+import { Button, Form, Select, Space } from 'antd';
 import { Option } from 'antd/lib/mentions';
 import PropTypes from 'prop-types';
-import { useState } from 'react';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
-    nameDepartmentActivity,
-    nameLevelRegister,
-    optionsTagTarget
+	nameDepartmentActivity,
+	nameLevelActivity,
+	nameOtherBy,
+	nameTarget,
+	nameTypeActivity,
+	nameTypeSort,
 } from '../config';
-import { tagRender } from '../pages/AdminManageUser';
-import { compareString } from '../utils/compareFunction';
+import { getFilter, saveFilter } from '../utils/common';
 import DatePicker from './DatePicker';
 
 const FilterActivity = (props) => {
-	const [level, setLevel] = useState(null);
-	const [target, setTarget] = useState(null);
-	const [department, setDepartment] = useState(null);
-	const [date, setDate] = useState(null);
+	const [form] = Form.useForm();
+	const location = useLocation();
 
-	const doResetFilter = () => {
-		setDate(null);
-		setDepartment(null);
-		setLevel(null);
-		setTarget(null);
+	const onFinish = (fieldsValue) => {
+		let { date, target } = fieldsValue;
+		date = date ? date.format('DD-MM-YYYY') : undefined;
+		target = target?.length ? target : undefined;
+		saveFilter({ ...fieldsValue, date, target }, location.pathname);
+		props.getData &&
+			props.getData({
+				...fieldsValue,
+				date,
+				target,
+				next: undefined,
+				previous: undefined,
+			});
 	};
 
-	const getDataWithFilter = () => {
-		props.getData && props.getData(date, department, level, target);
+	const renderSelect = (object = {}) => {
+		return Object.entries(object).map((c) => (
+			<Option key={c[0]} value={c[0]}>
+				{c[1]}
+			</Option>
+		));
 	};
+
+	useEffect(() => {
+		const data = {
+			orderBy: undefined,
+			sort: undefined,
+			active: undefined,
+			typeActivity: undefined,
+			date: undefined,
+			department: undefined,
+			level: undefined,
+			target: undefined,
+		};
+		if (!getFilter(data, location.pathname)) return;
+		data.target = data.target ? data.target.split(',') : undefined;
+		form.setFieldsValue({ ...data });
+		props.getData && props.getData(data);
+	}, []);
 
 	return (
-		<Card style={{ width: '100vw' }} size="small">
-			<Space>
-				<Select
-					onChange={(value) => setLevel(value)}
-					placeholder="Lọc theo cấp xét"
-					style={{ minWidth: 200 }}
-					value={level}
-				>
-					{Object.entries(nameLevelRegister).map((c) => (
-						<Option key={c[0]} value={c[0]}>
-							{c[1]}
-						</Option>
-					))}
-				</Select>
-				<Select
-					onChange={(value) => setDepartment(value)}
-					placeholder="Lọc theo khoa"
-					style={{ minWidth: 200 }}
-					value={department}
-				>
-					{Object.entries(nameDepartmentActivity).map((c) => (
-						<Option key={c[0]} value={c[0]}>
-							{c[1]}
-						</Option>
-					))}
-				</Select>
-				<Select
-					maxTagCount="responsive"
-					mode="tags"
-					placeholder="Lọc tiêu chí hoàn thành"
-					tagRender={tagRender}
-					style={{ minWidth: 200 }}
-					options={optionsTagTarget}
-					value={target}
-					onChange={(value) => {
-						if (value.includes('none')) setTarget(['none']);
-						else
-							setTarget(
-								value.sort((a, b) => compareString(b, a))
-							);
-					}}
-				/>
-				<DatePicker
-					onChange={(date, dateString) => setDate(dateString)}
-				/>
-				<Button
-					icon={<FilterOutlined />}
-					onClick={() => getDataWithFilter()}
-				>
-					Lọc
-				</Button>
-				<Button
-					type="primary"
-					icon={<ReloadOutlined />}
-					onClick={() => {
-						doResetFilter();
-					}}
-				>
-					Đặt lại
-				</Button>
+		<Form form={form} onFinish={onFinish}>
+			<Space wrap>
+				<Form.Item noStyle name="active">
+					<Select
+						placeholder="Trạng thái hoạt động"
+						style={{ minWidth: 200 }}
+						allowClear
+					>
+						<Option key={'true'}>Hoạt động đang hiện</Option>
+						<Option key={'false'}>Hoạt động đã ẩn</Option>
+					</Select>
+				</Form.Item>
+				<Form.Item noStyle name="typeActivity">
+					<Select
+						placeholder="Loại hoạt động"
+						style={{ minWidth: 200 }}
+						allowClear
+					>
+						{renderSelect(nameTypeActivity)}
+					</Select>
+				</Form.Item>
+				<Form.Item noStyle name="level">
+					<Select
+						placeholder="Hoạt động cấp"
+						style={{ minWidth: 200 }}
+						allowClear
+					>
+						{renderSelect(nameLevelActivity)}
+					</Select>
+				</Form.Item>
+				<Form.Item noStyle name="department">
+					<Select
+						placeholder="Lọc theo khoa"
+						style={{ minWidth: 200 }}
+						allowClear
+					>
+						{renderSelect(nameDepartmentActivity)}
+					</Select>
+				</Form.Item>
+				<Form.Item noStyle name="target">
+					<Select
+						maxTagCount="responsive"
+						mode="tags"
+						placeholder="Lọc tiêu chí hoạt động"
+						style={{ minWidth: 200 }}
+					>
+						{renderSelect(nameTarget)}
+					</Select>
+				</Form.Item>
+				<Form.Item noStyle name="date">
+					<DatePicker format="DD-MM-YYYY" />
+				</Form.Item>
+				<Form.Item noStyle name="orderBy">
+					<Select
+						placeholder="Xắp xếp theo"
+						style={{ minWidth: 100 }}
+						defaultValue="createAt"
+					>
+						{renderSelect(nameOtherBy)}
+					</Select>
+				</Form.Item>
+				<Form.Item noStyle name="sort">
+					<Select
+						placeholder="Loại sắp xếp"
+						style={{ minWidth: 100 }}
+						defaultValue="desc"
+					>
+						{renderSelect(nameTypeSort)}
+					</Select>
+				</Form.Item>
+				<Form.Item noStyle>
+					<Button icon={<FilterOutlined />} htmlType="submit">
+						Lọc
+					</Button>
+				</Form.Item>
+				<Form.Item noStyle>
+					<Button
+						type="primary"
+						icon={<ReloadOutlined />}
+						onClick={() => {
+							form.resetFields();
+						}}
+					>
+						Đặt lại
+					</Button>
+				</Form.Item>
 			</Space>
-		</Card>
+		</Form>
 	);
 };
 

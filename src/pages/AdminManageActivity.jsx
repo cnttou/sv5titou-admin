@@ -1,30 +1,32 @@
 import { ExclamationCircleOutlined } from '@ant-design/icons';
-import { Button, Layout, message, Modal, Space, Switch } from 'antd';
-import { useEffect, useState } from 'react';
+import { Button, Card, Layout, message, Modal, Space, Switch } from 'antd';
+import React, { useRef, useState } from 'react';
 import { uid as genId } from 'uid';
 import {
-    addActivityApi,
-    deleteActivityApi,
-    getAllRegisterActivityApi,
-    serializerDoc,
-    updateActivityApi
+	addActivityApi,
+	deleteActivityApi,
+	getAllRegisterActivityApi,
+	serializerDoc,
+	updateActivityApi,
 } from '../api/firestore';
 import FilterActivity from '../components/FilterActivity';
 import Loading from '../components/Loading';
 import TableCustom from '../components/TableCustom';
 import {
-    nameDepartmentActivity,
-    nameLevelActivity, nameTarget
+	nameDepartmentActivity,
+	nameLevelActivity,
+	nameTarget,
 } from '../config';
 import FormActivity from '../forms/FormActivity';
 import styles from '../styles/Admin.module.css';
-import { compareStringDate, compareStringName } from '../utils/compareFunction';
+import { nonAccentVietnamese } from '../utils/common';
 
 const { Content } = Layout;
 const { confirm } = Modal;
 
 const initActivity = {
 	image: '',
+	typeActivity: 'register',
 	active: true,
 	department: null,
 	level: null,
@@ -45,11 +47,13 @@ const initChooseActivity = {
 	type: '',
 	activity: {},
 };
-export default function AdminManageNews() {
-	const [listActivity, setListActivity] = useState([]);
+export default function AdminManageActivity() {
+	const [loading, setLoading] = useState(false);
+	const [activities, setActivities] = useState([]);
 	const [showModel, setShowModel] = useState(false);
 	const [loadingForm, setLoadingForm] = useState(false);
 	const [chooseActivity, setChooseActivity] = useState(initChooseActivity);
+	const filterValueRef = useRef({});
 
 	const handleShowModelToEdit = (item) => {
 		setChooseActivity({ type: TYPE_ACTION.EDIT, activity: item });
@@ -70,7 +74,7 @@ export default function AdminManageNews() {
 				return deleteActivityApi(item.id)
 					.then(() => {
 						message.success('Xóa thành công');
-						setListActivity((prevActivity) =>
+						setActivities((prevActivity) =>
 							prevActivity.filter((a) => a.id !== item.id)
 						);
 					})
@@ -83,13 +87,16 @@ export default function AdminManageNews() {
 	};
 
 	const handleUpdateActivity = (data, item) => {
-		updateActivityApi(item.id, { ...item, ...data })
+		updateActivityApi(item.id, {
+			...item,
+			...data,
+			lastUpdate: new Date().getTime(),
+			nameSearch: nonAccentVietnamese(data.name || item.name).split(/\s+/),
+		})
 			.then(() => {
 				message.success('Cập nhật thành công');
-				setListActivity((prevActivity) =>
-					prevActivity.map((a) =>
-						a.id === item.id ? { ...a, ...data } : a
-					)
+				setActivities((prevActivity) =>
+					prevActivity.map((a) => (a.id === item.id ? { ...a, ...data } : a))
 				);
 				setShowModel(false);
 				setLoadingForm(false);
@@ -102,13 +109,15 @@ export default function AdminManageNews() {
 	const handleSubmitModel = (data) => {
 		if (chooseActivity.type === TYPE_ACTION.ADD) {
 			const id = genId(20);
-			addActivityApi(id, {...data, createAt: new Date().getTime()})
+			addActivityApi(id, {
+				...data,
+				createAt: new Date().getTime(),
+				lastUpdate: new Date().getTime(),
+				nameSearch: nonAccentVietnamese(data.name).split(/\s+/),
+			})
 				.then(() => {
 					message.success('Thêm thành công');
-					setListActivity((prevActivity) => [
-						...prevActivity,
-						{ ...data, id },
-					]);
+					setActivities((prevActivity) => [...prevActivity, { ...data, id }]);
 					setChooseActivity(initChooseActivity);
 					setShowModel(false);
 				})
@@ -121,23 +130,39 @@ export default function AdminManageNews() {
 		}
 	};
 
+	const doGetAllRegisterActivity = (data) => {
+		setLoading(true);
+		filterValueRef.current = data;
+		getAllRegisterActivityApi(data)
+			.then(serializerDoc)
+			.then((data) => {
+				if (data.length) setActivities(data);
+				else message.warning('Không có dữ liệu để tải');
+			})
+			.catch((error) => {
+				console.error(error);
+				message.error('Lỗi tải dữ liệu');
+			})
+			.finally(() => setLoading(false));
+	};
+
+	const changePage = (isNextPage) => {
+		const data = {
+			...filterValueRef.current,
+			previous: undefined,
+			next: undefined,
+		};
+		if (isNextPage) data.next = activities[activities.length - 1];
+		else data.previous = activities[0];
+		doGetAllRegisterActivity(data);
+	};
+
 	const columns = [
 		{
 			title: 'Trạng thái',
 			dataIndex: 'active',
 			key: 'active',
 			width: 120,
-			filters: [
-				{
-					text: 'Chưa kích hoạt',
-					value: 'false',
-				},
-				{
-					text: 'Đã kích hoạt',
-					value: 'true',
-				},
-			],
-			onFilter: (value, record) => record.active.toString() === value,
 			render: (text, record, index) => (
 				<Switch
 					checked={text}
@@ -153,11 +178,6 @@ export default function AdminManageNews() {
 			dataIndex: 'level',
 			key: 'level',
 			width: 150,
-			filters: Object.entries(nameLevelActivity).map((c) => ({
-				value: c[0],
-				text: c[1],
-			})),
-			onFilter: (value, record) => record.level === value,
 			render: (text) => nameLevelActivity[text],
 		},
 		{
@@ -165,29 +185,17 @@ export default function AdminManageNews() {
 			dataIndex: 'department',
 			key: 'department',
 			width: 200,
-			filters: Object.entries(nameDepartmentActivity).map((c) => ({
-				value: c[0],
-				text: c[1],
-			})),
-			onFilter: (value, record) => record.department === value,
 			render: (text) => nameDepartmentActivity[text],
 		},
 		{
 			title: 'Tên chương trình',
 			dataIndex: 'name',
 			key: 'name',
-			searchFilter: true,
-			sorter: (a, b) => compareStringName(a.name, b.name),
 		},
 		{
 			title: 'Tiêu chí',
 			dataIndex: 'target',
 			key: 'target',
-			filters: Object.entries(nameTarget).map((c) => ({
-				value: c[0],
-				text: c[1],
-			})),
-			onFilter: (value, record) => record.target.includes(value),
 			render: (text) => text.map((c) => nameTarget[c]).join(', '),
 		},
 		{
@@ -195,9 +203,6 @@ export default function AdminManageNews() {
 			dataIndex: 'date',
 			key: 'date',
 			width: 150,
-			dateBeweenFilter: true,
-			defaultSortOrder: 'descend',
-			sorter: (a, b) => compareStringDate(a, b),
 		},
 		{
 			title: 'Địa điểm',
@@ -218,9 +223,7 @@ export default function AdminManageNews() {
 			width: 160,
 			render: (text, record) => (
 				<Space size="middle">
-					<Button onClick={() => handleShowModelToEdit(record)}>
-						Sửa
-					</Button>
+					<Button onClick={() => handleShowModelToEdit(record)}>Sửa</Button>
 					<Button danger onClick={() => handleDeleteActivity(record)}>
 						Xóa
 					</Button>
@@ -232,33 +235,29 @@ export default function AdminManageNews() {
 	const loadTable = () => (
 		<TableCustom
 			columns={columns}
-			dataSource={listActivity}
+			dataSource={activities}
 			pagination={false}
 			scroll={{ y: window.screen.height - 200 }}
 			footer={() => (
-				<Button type="primary" block onClick={handleShowModelToAddNew}>
-					Thêm hoạt động
-				</Button>
+				<div className={styles.itemCenter}>
+					<Button onClick={() => changePage(false)}>Trang trước</Button>
+					<Button onClick={() => changePage(true)}>Trang sau</Button>
+				</div>
 			)}
 		/>
 	);
 
-    const doGetAllRegisterActivity = (date, department, level, target)=>{
-        getAllRegisterActivityApi()
-            .then(serializerDoc)
-            .then((data) => {
-                setListActivity(data);
-            });
-    }
-
-	useEffect(() => {
-        doGetAllRegisterActivity();
-	}, []);
-
 	return (
 		<Content className={styles.content}>
-            <FilterActivity getData={doGetAllRegisterActivity} />
-			{listActivity?.length ? loadTable() : <Loading />}
+			<Card style={{ width: '100vw' }} size="small">
+				<div className={styles.itemBetween}>
+					<FilterActivity getData={doGetAllRegisterActivity} />
+					<Button type="primary" onClick={handleShowModelToAddNew}>
+						Thêm hoạt động
+					</Button>
+				</div>
+			</Card>
+			{!loading ? loadTable() : <Loading />}
 			<Modal
 				width={770}
 				visible={showModel}

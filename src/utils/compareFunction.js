@@ -9,8 +9,6 @@ export const compareString = (a, b) => {
 	if (nameA > nameB) {
 		return 1;
 	}
-
-	// names must be equal
 	return 0;
 };
 export const compareStringName = (a, b) => {
