@@ -1,5 +1,5 @@
 import { FilterOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Button, Form, Select } from 'antd';
+import { Button, Form, Input, Select } from 'antd';
 import { Option } from 'antd/lib/mentions';
 // import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
@@ -17,8 +17,8 @@ import { getFilter, saveFilter } from '../utils/common';
 // import DatePicker from './DatePicker';
 
 const formLayout = {
-	labelCol: { span: 4 },
-	wrapperCol: { span: 14 },
+	labelCol: { span: 1 },
+	wrapperCol: { span: 1 },
 };
 
 const FilterActivity = (props) => {
@@ -69,26 +69,26 @@ const FilterActivity = (props) => {
 	const rules = [{ required: true, message: 'Bạn phải lọc theo trường này' }];
 	return (
 		<Form {...formLayout} layout="inline" form={form} onFinish={onFinish}>
-			<Form.Item name="active" rules={rules}>
-				<Select
-					placeholder="Trạng thái hoạt động"
-					style={{ minWidth: 200 }}
-					allowClear
-				>
-					<Option key={'true'}>Hoạt động đang hiện</Option>
-					<Option key={'false'}>Hoạt động đã ẩn</Option>
-				</Select>
-			</Form.Item>
-			<Form.Item name="typeActivity" rules={rules}>
-				<Select
-					placeholder="Loại hoạt động"
-					style={{ minWidth: 200 }}
-					allowClear
-				>
-					{renderSelect(nameTypeActivity)}
-				</Select>
+			<Form.Item>
+				<Input.Group compact>
+					<Form.Item name="active" rules={rules}>
+						<Select
+							placeholder="Trạng thái hoạt động"
+							style={{ minWidth: 170 }}
+						>
+							<Option key={'true'}>Hoạt động đang hiện</Option>
+							<Option key={'false'}>Hoạt động đã ẩn</Option>
+						</Select>
+					</Form.Item>
+					<Form.Item name="typeActivity" rules={rules}>
+						<Select placeholder="Loại hoạt động" style={{ minWidth: 140 }}>
+							{renderSelect(nameTypeActivity)}
+						</Select>
+					</Form.Item>
+				</Input.Group>
 			</Form.Item>
 			<Form.Item
+				noStyle
 				shouldUpdate={(prev, curr) => prev.typeActivity !== curr.typeActivity}
 			>
 				{({ getFieldValue }) =>
@@ -96,7 +96,7 @@ const FilterActivity = (props) => {
 						<Form.Item name="level">
 							<Select
 								placeholder="Hoạt động cấp"
-								style={{ minWidth: 200 }}
+								style={{ minWidth: 140 }}
 								allowClear
 							>
 								{renderSelect(nameLevelActivity)}
@@ -106,6 +106,7 @@ const FilterActivity = (props) => {
 				}
 			</Form.Item>
 			<Form.Item
+				noStyle
 				shouldUpdate={(prev, curr) =>
 					prev.typeActivity !== curr.typeActivity || prev.level !== curr.level
 				}
@@ -146,31 +147,39 @@ const FilterActivity = (props) => {
 					) : null
 				}
 			</Form.Item> */}
-			<Form.Item name="orderBy" initialValue={'lastUpdate'}>
-				<Select placeholder="Xắp xếp theo" style={{ minWidth: 100 }}>
-					{renderSelect(nameOtherBy)}
-				</Select>
-			</Form.Item>
-			<Form.Item name="sort" initialValue={'desc'}>
-				<Select placeholder="Loại sắp xếp" style={{ minWidth: 100 }}>
-					{renderSelect(nameTypeSort)}
-				</Select>
-			</Form.Item>
-			<Form.Item wrapperCol={{ span: 14, offset: 4 }}>
-				<Button icon={<FilterOutlined />} htmlType="submit">
-					Lọc
-				</Button>
+			<Form.Item>
+				<Input.Group compact>
+					<Form.Item name="orderBy" initialValue={'lastUpdate'}>
+						<Select placeholder="Xắp xếp theo" style={{ minWidth: 100 }}>
+							{renderSelect(nameOtherBy)}
+						</Select>
+					</Form.Item>
+					<Form.Item name="sort" initialValue={'desc'} noStyle>
+						<Select placeholder="Loại sắp xếp" style={{ minWidth: 100 }}>
+							{renderSelect(nameTypeSort)}
+						</Select>
+					</Form.Item>
+				</Input.Group>
 			</Form.Item>
 			<Form.Item>
-				<Button
-					type="primary"
-					icon={<ReloadOutlined />}
-					onClick={() => {
-						form.resetFields();
-					}}
-				>
-					Đặt lại
-				</Button>
+				<Input.Group compact>
+					<Form.Item wrapperCol={{ span: 14, offset: 4 }}>
+						<Button icon={<FilterOutlined />} htmlType="submit">
+							Lọc
+						</Button>
+					</Form.Item>
+					<Form.Item>
+						<Button
+							type="primary"
+							icon={<ReloadOutlined />}
+							onClick={() => {
+								form.resetFields();
+							}}
+						>
+							Đặt lại
+						</Button>
+					</Form.Item>
+				</Input.Group>
 			</Form.Item>
 		</Form>
 	);

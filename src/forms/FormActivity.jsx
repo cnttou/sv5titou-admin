@@ -47,6 +47,7 @@ const FormActivity = (props) => {
 		const data = Object.assign(form.getFieldsValue());
 		data.date = dayjs(form.getFieldsValue().date).format('DD-MM-YYYY');
 		data.typeActivity = typeActivity;
+        data.id = item.id;
 		handleSubmit(data);
 	};
 	const handleUpload = (url) => {

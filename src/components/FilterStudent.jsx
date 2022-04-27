@@ -22,7 +22,8 @@ const FilterStudent = (props) => {
 		let { targetSuccess } = fieldsValue;
 		targetSuccess = targetSuccess?.length ? targetSuccess : undefined;
 		saveFilter({ ...fieldsValue, targetSuccess }, location.pathname);
-		props.getData && props.getData({ ...fieldsValue, targetSuccess, studentCode: undefined });
+		props.getData &&
+			props.getData({ ...fieldsValue, targetSuccess, studentCode: undefined });
 	};
 
 	const renderSelect = (object = {}) => {
@@ -56,17 +57,18 @@ const FilterStudent = (props) => {
 					<Search
 						placeholder="Tìm theo MSSV"
 						onSearch={(value) => props.getData({ studentCode: value })}
+						style={{ width: 170 }}
 						enterButton
 					/>
 				</Form.Item>
 				<Form.Item noStyle name="classUser">
-					<Input placeholder="Tên lớp" />
+					<Input placeholder="Tên lớp" style={{ width: 130 }} />
 				</Form.Item>
 				<Form.Item noStyle name="levelReview">
 					<Select
 						allowClear
 						placeholder="Lọc theo cấp xét"
-						style={{ minWidth: 200 }}
+						style={{ minWidth: 140 }}
 					>
 						{renderSelect(nameLevelRegister)}
 					</Select>
@@ -81,31 +83,39 @@ const FilterStudent = (props) => {
 						options={optionsTargetSuccess}
 					/>
 				</Form.Item>
-				<Form.Item noStyle name="orderBy">
-					<Select placeholder="Xắp xếp theo" style={{ minWidth: 100 }}>
-						{renderSelect(nameOtherBy)}
-					</Select>
-				</Form.Item>
-				<Form.Item noStyle name="sort">
-					<Select placeholder="Loại sắp xếp" style={{ minWidth: 100 }}>
-						{renderSelect(nameTypeSort)}
-					</Select>
+				<Form.Item noStyle>
+					<Input.Group compact>
+						<Form.Item noStyle name="orderBy">
+							<Select placeholder="Xắp xếp theo" style={{ minWidth: 110 }}>
+								{renderSelect(nameOtherBy)}
+							</Select>
+						</Form.Item>
+						<Form.Item noStyle name="sort">
+							<Select placeholder="Loại sắp xếp" style={{ minWidth: 90 }}>
+								{renderSelect(nameTypeSort)}
+							</Select>
+						</Form.Item>
+					</Input.Group>
 				</Form.Item>
 				<Form.Item noStyle>
-					<Button icon={<FilterOutlined />} htmlType="submit">
-						Lọc
-					</Button>
-				</Form.Item>
-				<Form.Item noStyle>
-					<Button
-						type="primary"
-						icon={<ReloadOutlined />}
-						onClick={() => {
-							form.resetFields();
-						}}
-					>
-						Đặt lại
-					</Button>
+					<Input.Group compact>
+						<Form.Item noStyle>
+							<Button icon={<FilterOutlined />} htmlType="submit">
+								Lọc
+							</Button>
+						</Form.Item>
+						<Form.Item noStyle>
+							<Button
+								type="primary"
+								icon={<ReloadOutlined />}
+								onClick={() => {
+									form.resetFields();
+								}}
+							>
+								Đặt lại
+							</Button>
+						</Form.Item>
+					</Input.Group>
 				</Form.Item>
 			</Space>
 		</Form>

@@ -295,7 +295,7 @@ export default function AdminManageUser() {
 				setUserActivity(data);
 			})
 			.catch((error) => {
-				message.error('Lỗi tải dữ liệu');
+				message.error('Tải dữ liệu không thành công');
 				console.error(error);
 			})
 			.finally(() => setLoading(false));

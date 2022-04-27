@@ -1,31 +1,29 @@
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import {
-	Button,
-	Card,
-	Layout,
-	message,
-	Modal,
-	Space,
-	Switch,
-	Table,
+    Button,
+    Card,
+    Layout,
+    message,
+    Modal,
+    Space,
+    Switch,
+    Table
 } from 'antd';
 import dayjs from 'dayjs';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { uid as genId } from 'uid';
 import {
-	addActivityApi,
-	deleteActivityApi,
-	getAllRegisterActivityApi,
-	serializerDoc,
-	textIndexApi,
-	updateActivityApi,
+    addActivityApi,
+    deleteActivityApi,
+    getAllRegisterActivityApi,
+    serializerDoc, updateActivityApi
 } from '../api/firestore';
 import FilterActivity from '../components/FilterActivity';
 import Loading from '../components/Loading';
 import {
-	nameDepartmentActivity,
-	nameLevelActivity,
-	nameTarget,
+    nameDepartmentActivity,
+    nameLevelActivity,
+    nameTarget
 } from '../config';
 import FormActivity from '../forms/FormActivity';
 import styles from '../styles/Admin.module.css';
@@ -71,7 +69,10 @@ export default function AdminManageActivity() {
 	};
 
 	const handleShowModelToAddNew = () => {
-		setChooseActivity({ type: TYPE_ACTION.ADD, activity: initActivity });
+		setChooseActivity({
+			type: TYPE_ACTION.ADD,
+			activity: { ...initActivity, id: genId(20) },
+		});
 		setShowModel(true);
 	};
 
@@ -112,17 +113,17 @@ export default function AdminManageActivity() {
 				setLoadingForm(false);
 			})
 			.catch(() => {
-				message.error('Cập nhật không thành công. Vui lòng thử lại');
+				message.error('Cập nhật thất bại. Vui lòng thử lại');
 			});
 	};
 
 	const handleSubmitModel = (data) => {
 		if (chooseActivity.type === TYPE_ACTION.ADD) {
-			const id = genId(20);
             let date = new Date().getTime();
             if (data.date) date = dayjs(data.date, 'DD-MM-YYYY').valueOf();
+            const {id, ...rest} = data;
 			addActivityApi(id, {
-				...data,
+				...rest,
 				createAt: date,
 				lastUpdate: new Date().getTime(),
 				nameSearch: nonAccentVietnamese(data.name).split(/\s+/),
@@ -134,28 +135,13 @@ export default function AdminManageActivity() {
 					setShowModel(false);
 				})
 				.catch(() => {
-					message.error('Thêm không thành công, vui lòng thử lại');
+					message.error('Thêm thất bại, vui lòng thử lại');
 				});
 			setLoadingForm(false);
 		} else {
 			handleUpdateActivity(data, chooseActivity.activity);
 		}
 	};
-
-	// function sleep(ms) {
-	// 	return new Promise((resolve) => setTimeout(resolve, ms));
-	// }
-	// const elements = document.querySelectorAll('td.mat-cell.cdk-cell.actions.cdk-column-action.mat-column-action.ng-star-inserted > button')
-    // (async () => {
-	// 	for (const element of elements) {
-	// 		element.click();
-	// 		await sleep(1000);
-	// 		document.querySelector('button.mat-menu-item').click();
-	// 		await sleep(500);
-	// 		document.querySelector('button.delete-index-delete-button').click();
-	// 		await sleep(1500);
-	// 	}
-	// })();
 
 	const doGetAllRegisterActivity = (data) => {
 		setLoading(true);
@@ -164,7 +150,7 @@ export default function AdminManageActivity() {
 			.then(serializerDoc)
 			.then((data) => {
 				if (data.length) setActivities(data);
-				else message.warning('Không có dữ liệu để tải');
+				else message.warning('Không có dữ liệu');
 			})
 			.catch((error) => {
 				console.error(error);
@@ -273,10 +259,6 @@ export default function AdminManageActivity() {
 			)}
 		/>
 	);
-
-	useEffect(() => {
-		textIndexApi();
-	}, []);
 
 	return (
 		<Content className={styles.content}>

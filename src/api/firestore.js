@@ -50,7 +50,7 @@ export const getUserApi = ({
 	acid,
 }) => {
 	let ref = db.collection(USER);
-    if (acid) ref = ref.where('activityId', 'array-contains', acid);
+	if (acid) ref = ref.where('activityId', 'array-contains', acid);
 	if (studentCode) return ref.where('studentCode', '==', studentCode).get();
 	if (levelReview) ref = ref.where('levelReview', '==', levelReview);
 	if (classUser) ref = ref.where('classUser', '==', classUser);
@@ -59,9 +59,10 @@ export const getUserApi = ({
 			ref = ref.where('targetSuccess', 'in', [[]]);
 		else ref = ref.where('targetSuccess', 'in', [targetSuccess]);
 	}
-	if (orderBy && sort) ref = ref.orderBy(orderBy, sort);
-	if (previous) ref = ref.endBefore(previous[orderBy]);
-	if (next) ref = ref.startAfter(next[orderBy]);
+	if (orderBy && sort)
+		ref = ref.orderBy(orderBy || 'lastUpdate', sort || 'asc');
+	if (previous) ref = ref.endBefore(previous[orderBy || 'lastUpdate']);
+	if (next) ref = ref.startAfter(next[orderBy || 'lastUpdate']);
 	return ref.limit(limit || 10).get();
 };
 
@@ -99,34 +100,30 @@ function getCombinations(valuesArray) {
 	return combi;
 }
 
-export const textIndexApi = () => {
-	const initTest = {
-		active: 'true',
-		typeActivity: 'register',
-		date: '20-12-2022',
-		department: 'cntt',
-		level: 'lop',
-		target: ['hoc-tap'],
-	};
-	const combination = getCombinations([
-		'department',
-		'level',
-		'target',
-	]);
-	combination.forEach((arr) => {
-		const params = { ...initTest };
-		Object.keys(params).forEach((key) => {
-			if (!arr.includes(key)) params[key] = undefined;
-		});
-		console.info(params);
-		getAllRegisterActivityApi({
-			...params,
-			limit: 1,
-			orderBy: 'createAt',
-			sort: 'asc',
-		}).catch((error) => console.error(error));
-	});
-};
+// export const testIndexApi = () => {
+// 	const initTest = {
+// 		active: 'true',
+// 		typeActivity: 'register',
+// 		date: '20-12-2022',
+// 		department: 'cntt',
+// 		level: 'lop',
+// 		target: ['hoc-tap'],
+// 	};
+// 	const combination = getCombinations(['department', 'level', 'target']);
+// 	combination.forEach((arr) => {
+// 		const params = { ...initTest };
+// 		Object.keys(params).forEach((key) => {
+// 			if (!arr.includes(key)) params[key] = undefined;
+// 		});
+// 		console.info(params);
+// 		getAllRegisterActivityApi({
+// 			...params,
+// 			limit: 1,
+// 			orderBy: 'createAt',
+// 			sort: 'asc',
+// 		}).catch((error) => console.error(error));
+// 	});
+// };
 
 export const getAllRegisterActivityApi = ({
 	active,
@@ -144,11 +141,11 @@ export const getAllRegisterActivityApi = ({
 }) => {
 	let ref = db.collection(ACTIVITY);
 	if (nameSearch)
-		ref = ref.where(
+		return ref.where(
 			'nameSearch',
 			'array-contains-any',
 			nonAccentVietnamese(nameSearch).split(/\s+/)
-		);
+		).limit(7).get();
 	if (typeActivity) ref = ref.where('typeActivity', '==', typeActivity);
 	if (active) ref = ref.where('active', '==', active === 'true');
 	if (date) ref = ref.where('date', '==', date);
@@ -160,9 +157,9 @@ export const getAllRegisterActivityApi = ({
 			'array-contains-any',
 			target.sort((a, b) => compareString(b, a))
 		);
-	if (orderBy && sort) ref = ref.orderBy(orderBy, sort);
-	if (previous) ref = ref.endBefore(previous[orderBy]);
-	if (next) ref = ref.startAfter(next[orderBy]);
+	if (orderBy && sort) ref = ref.orderBy(orderBy || 'lastUpdate', sort || 'asc');
+	if (previous) ref = ref.endBefore(previous[orderBy||'lastUpdate']);
+	if (next) ref = ref.startAfter(next[orderBy||'lastUpdate']);
 
 	return ref.limit(limit || 10).get();
 };

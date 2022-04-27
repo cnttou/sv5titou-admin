@@ -27,9 +27,9 @@ function InputUpload({ text, id, ...props }) {
 	const handleBeforeUpload = (file) => {
 		if (props.handleBeforeUpload) props.handleBeforeUpload(file);
 
-		const isLt5M = file.size / 1024 / 1024 < 4;
+		const isLt5M = file.size / 1024 / 1024 < 1;
 		if (!isLt5M) {
-			message.error('Ảnh phải nhỏ hơn 4MB!');
+			message.error('Ảnh phải nhỏ hơn 1MB!');
 		}
 		return isLt5M;
 	};
@@ -40,14 +40,6 @@ function InputUpload({ text, id, ...props }) {
 		};
 		return imageCompression(file, options)
 			.then(function (compressedFile) {
-				console.log(
-					'compressedFile instanceof Blob',
-					compressedFile instanceof Blob
-				); // true
-				console.log(
-					`compressedFile size ${compressedFile.size / 1024 / 1024} MB`
-				); // smaller than maxSizeMB
-
 				return compressedFile;
 			})
 			.catch(function (error) {
@@ -67,7 +59,7 @@ function InputUpload({ text, id, ...props }) {
 				setState('uploadProgress', progress);
 			},
 			(error) => {
-				message.error('Có lỗi xảy ra vui lòng thử lại');
+				message.error('Upload ảnh không thành công');
 				setState('onUploadError', error);
 				setState('onUploadSuccess', false);
 			},

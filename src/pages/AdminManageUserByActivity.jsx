@@ -123,7 +123,7 @@ export default function AdminManageUserByActivity() {
 
 	const changePage = (isNextPage) => {
 		if (!activityChoice) {
-			message.warning('Vui lòng chọn hoạt động');
+			message.warning('Vui lòng chọn một hoạt động');
 			return;
 		}
 		const data = {
@@ -167,6 +167,7 @@ export default function AdminManageUserByActivity() {
 			.then(serializerDoc)
 			.then((data) => {
 				if (!data.length) {
+                    message.warning('Không có dữ liệu');
 					return;
 				}
 				setActivities(data);
@@ -259,7 +260,7 @@ export default function AdminManageUserByActivity() {
 						autoFocus
 						options={activities.map((a) => ({ label: a.name, value: a.id }))}
 						style={{
-							width: 200,
+							width: 240,
 						}}
 						value={searchValue}
 						onSelect={onSelectActivity}
@@ -270,7 +271,7 @@ export default function AdminManageUserByActivity() {
 					<div>
 						<Input.Group compact>
 							<Input
-								style={{ width: '250px' }}
+								style={{ width: 220 }}
 								placeholder="Danh sách MSSV để xác nhận"
 							/>
 							<Button
@@ -278,7 +279,7 @@ export default function AdminManageUserByActivity() {
 								disabled={!activityChoice}
 								onClick={handleConfirmByListStudentCode}
 							>
-								Xác nhận tất cả
+								Xác nhận
 							</Button>
 						</Input.Group>
 					</div>
