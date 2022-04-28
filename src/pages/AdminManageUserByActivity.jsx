@@ -1,16 +1,16 @@
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import {
-	AutoComplete,
 	Button,
 	Card,
 	Input,
 	Layout,
 	message,
 	Modal,
+	Select,
 	Table,
 	Typography,
 } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
 	getAllRegisterActivityApi,
 	getUserApi,
@@ -31,10 +31,11 @@ export default function AdminManageUserByActivity() {
 	const [users, setUsers] = useState([]);
 	const [activityChoice, setActivityChoice] = useState();
 	const [activities, setActivities] = useState([]);
-	const [loading, setLoading] = useState(false);
+	const [loadingUser, setLoadingUser] = useState(false);
 	const [searchValue, setSearchValue] = useState('');
 	const inputStudentCode = useRef([]);
 	const filterValueRef = useRef({});
+	const timeout = useRef();
 
 	const handleConfirmActivity = (id, uid, confirm) => {
 		let data = {};
@@ -86,11 +87,11 @@ export default function AdminManageUserByActivity() {
 			.split(/[,. -]+/)
 			.filter((c) => c.length === 10 && parseInt(c));
 
-		const listUser = activityChoice.users.filter(
+		const listUser = users.filter(
 			(user) =>
 				listStudentCode.includes(user.studentCode) &&
-				user.activities[activityChoice.id].proof >= 1 &&
-				user.activities[activityChoice.id].confirm === false
+				Object.keys(user.activities[activityChoice?.id].proof||{}).length >= 1 &&
+				user.activityId.includes(activityChoice?.id)
 		);
 		const listUserId = listUser.map((c) => c.id);
 
@@ -103,9 +104,9 @@ export default function AdminManageUserByActivity() {
 			icon: null,
 			content: (
 				<>
-					<p>{`Có ${listUserId.length} sinh viên sẽ được xác nhận hoạt động này`}</p>
+					<p>{`Có ${listUserId.length} sinh viên trong trang này sẽ được xác nhận`}</p>
 					{listUser.map((user) => (
-						<Text key={user.uid}>{`${user.studentCode} - ${
+						<Text key={user.id}>{`${user.studentCode} - ${
 							user.fullName || user.displayName
 						}`}</Text>
 					))}
@@ -114,7 +115,7 @@ export default function AdminManageUserByActivity() {
 			onOk() {
 				return Promise.all(
 					listUserId.map((uid) =>
-						handleConfirmActivity(uid, activityChoice.id, true)
+						handleConfirmActivity(activityChoice?.id, uid, 'true')
 					)
 				);
 			},
@@ -141,10 +142,10 @@ export default function AdminManageUserByActivity() {
 			message.warning('Vui lòng chọn một hoạt động.');
 			return;
 		}
-		setLoading(true);
+		setLoadingUser(true);
 		filterValueRef.current = dataFilter;
-        console.log(dataFilter);
-        return getUserApi({ ...dataFilter, acid: activityChoice.id })
+		console.log(dataFilter);
+		return getUserApi({ ...dataFilter, acid: activityChoice?.id })
 			.then(serializerDoc)
 			.then((data) => {
 				if (!data.length) {
@@ -157,17 +158,16 @@ export default function AdminManageUserByActivity() {
 				message.error('Lỗi tải dữ liệu');
 				console.error(error);
 			})
-			.finally(() => setLoading(false));
+			.finally(() => setLoadingUser(false));
 	};
 
 	const getActivities = (dataFilter, nextPage = false) => {
-		setLoading(true);
 		if (nextPage) dataFilter.next = activities[activities.length - 1];
 		return getAllRegisterActivityApi(dataFilter)
 			.then(serializerDoc)
 			.then((data) => {
 				if (!data.length) {
-                    message.warning('Không có dữ liệu');
+					message.warning('Không có dữ liệu');
 					return;
 				}
 				setActivities(data);
@@ -175,16 +175,23 @@ export default function AdminManageUserByActivity() {
 			.catch((error) => {
 				message.error('Lỗi tải dữ liệu');
 				console.log(error);
-			})
-			.finally(() => setLoading(false));
+			});
 	};
 
 	const onSelectActivity = (idChoice) => {
 		const activity = activities.find((c) => c.id === idChoice);
 		if (activity) {
-			setSearchValue(activity.name);
 			setActivityChoice(activity);
+			setSearchValue(activity.name);
 		}
+	};
+
+	const handleChangeSearch = (value) => {
+		clearTimeout(timeout.current);
+		setSearchValue(value);
+		timeout.current = setTimeout(() => {
+			getActivities({ nameSearch: value });
+		}, 400);
 	};
 
 	const columns = [
@@ -207,9 +214,9 @@ export default function AdminManageUserByActivity() {
 			title: 'Minh chứng',
 			key: 'proof',
 			render: (user) => {
-				return Object.values(user.activities[activityChoice.id].proof)
+				return Object.values(user.activities[activityChoice?.id]?.proof || {})
 					?.length ? (
-					<ShowProofImage proof={user.activities[activityChoice.id].proof} />
+					<ShowProofImage proof={user.activities[activityChoice?.id].proof} />
 				) : (
 					'Không có'
 				);
@@ -218,54 +225,43 @@ export default function AdminManageUserByActivity() {
 		{
 			title: 'Trạng thái',
 			key: 'confirm',
-			render: (user) => {
-				const activity = user.activities[activityChoice.id];
-				return (
-					<InputSelectWithAddItem
-						value={
-							activity.reason ||
-							user.confirm.includes(activityChoice.id).toString()
-						}
-						option={optionProof}
-						setValue={(key) =>
-							Object.values(activity.proof || {}).length
-								? handleConfirmActivity(activityChoice.id, user.id, key)
-								: showBoxQuestion(activityChoice.id, user.id, key)
-						}
-						style={{
-							width: '100%',
-							maxWidth: 250,
-						}}
-					/>
-				);
-			},
+			render: (user) => (
+				<InputSelectWithAddItem
+					value={
+						user.activities[activityChoice?.id].reason ||
+						user.confirm.includes(activityChoice?.id) + ''
+					}
+					option={optionProof}
+					setValue={(key) =>
+						Object.values(user.activities[activityChoice?.id]?.proof || {})
+							.length
+							? handleConfirmActivity(activityChoice?.id, user.id, key)
+							: showBoxQuestion(activityChoice?.id, user.id, key)
+					}
+					style={{
+						width: '100%',
+						maxWidth: 250,
+					}}
+				/>
+			),
 		},
 	];
-
-	useEffect(() => {
-		const timeout = setTimeout(() => {
-			getActivities({ nameSearch: searchValue });
-		}, 400);
-
-		return () => {
-			clearTimeout(timeout);
-		};
-	}, [searchValue]);
 
 	return (
 		<Content className={styles.contentAdminManageUser}>
 			<Card style={{ width: '100vw' }} size="small">
 				<div className={styles.itemBetween}>
-					<AutoComplete
-						autoFocus
-						options={activities.map((a) => ({ label: a.name, value: a.id }))}
-						style={{
-							width: 240,
-						}}
+					<Select
+						showSearch
 						value={searchValue}
-						onSelect={onSelectActivity}
-						onSearch={(value) => setSearchValue(value)}
 						placeholder="Chọn hoạt động"
+						style={{ width: 240 }}
+						showArrow={false}
+						filterOption={false}
+						notFoundContent={null}
+						onSearch={handleChangeSearch}
+						onSelect={onSelectActivity}
+						options={activities.map((a) => ({ label: a.name, value: a.id }))}
 					/>
 					<FilterStudent getData={getUser} />
 					<div>
@@ -273,6 +269,7 @@ export default function AdminManageUserByActivity() {
 							<Input
 								style={{ width: 220 }}
 								placeholder="Danh sách MSSV để xác nhận"
+								onChange={(e) => (inputStudentCode.current = e.target.value)}
 							/>
 							<Button
 								type="primary"
@@ -288,7 +285,7 @@ export default function AdminManageUserByActivity() {
 			<Table
 				columns={columns}
 				dataSource={users}
-				loading={loading}
+				loading={loadingUser}
 				rowKey={(record) => record.id}
 				rowClassName="rowTable"
 				size="middle"

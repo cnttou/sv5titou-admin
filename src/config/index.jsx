@@ -49,7 +49,6 @@ export const optionsTargetSuccess = [
 	{ value: 'the-luc', label: 'Thể lực', color: '#bae637' },
 	{ value: 'dao-duc', label: 'Đạo đức', color: '#f759ab' },
 	{ value: 'hoi-nhap', label: 'Hội nhập', color: '#40a9ff' },
-	{ value: 'none', label: 'Chưa hoàn thành cái nào', color: '#722ed1' },
 ];
 
 export const optionProof = [
@@ -150,7 +149,7 @@ export const optionsTagTarget = [
 	{ value: 'the-luc', label: 'Thể lực', color: '#bae637' },
 	{ value: 'dao-duc', label: 'Đạo đức', color: '#f759ab' },
 	{ value: 'hoi-nhap', label: 'Hội nhập', color: '#40a9ff' },
-	{ value: 'none', label: 'Chưa hoàn thành cái nào', color: '#722ed1' },
+	{ value: 'none', label: 'Chưa có cái nào', color: '#d1d5db' },
 ];
 
 export const nameDepartmentActivity = {

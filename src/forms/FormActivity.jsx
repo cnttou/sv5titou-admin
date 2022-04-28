@@ -36,7 +36,7 @@ const FormActivity = (props) => {
 	useEffect(() => {
 		let date = null;
 		if (item.date) date = dayjs(item.date, 'DD-MM-YYYY');
-        setTypeActivity(item.typeActivity);
+		setTypeActivity(item.typeActivity);
 		form.setFieldsValue({ ...item, date });
 		item.active && setActive(item.active);
 		setLoading(false);
@@ -47,7 +47,7 @@ const FormActivity = (props) => {
 		const data = Object.assign(form.getFieldsValue());
 		data.date = dayjs(form.getFieldsValue().date).format('DD-MM-YYYY');
 		data.typeActivity = typeActivity;
-        data.id = item.id;
+		data.id = item.id;
 		handleSubmit(data);
 	};
 	const handleUpload = (url) => {
@@ -80,6 +80,7 @@ const FormActivity = (props) => {
 					rules={[{ required: true }]}
 				>
 					<Select
+						disabled={!!item.name}
 						placeholder="Loại của hoạt động"
 						onChange={(value) => setTypeActivity(value)}
 					>
@@ -128,7 +129,11 @@ const FormActivity = (props) => {
 					<Input placeholder="Nhập tên chương trình" />
 				</Form.Item>
 				<Form.Item name="target" label="Tiêu chí" rules={[{ required: true }]}>
-					<Select placeholder="Nhập tiêu chí xét SV5T" mode="multiple">
+					<Select
+						placeholder="Nhập tiêu chí xét SV5T"
+						mode="multiple"
+						disabled={!!item.name}
+					>
 						{renderSelect(nameTarget)}
 					</Select>
 				</Form.Item>

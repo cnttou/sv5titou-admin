@@ -5,6 +5,7 @@
 		"dev": "vite",
 		"build": "vite build",
 		"deploy": "vite build&&firebase deploy --only hosting:sv5t-admin",
+		"deploy:only": "firebase deploy --only hosting:sv5t-admin",
 		"serve": "vite preview"
 	},
 	"dependencies": {

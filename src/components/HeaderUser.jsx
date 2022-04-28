@@ -13,15 +13,15 @@ import { useState } from 'react';
 const { Header } = Layout;
 
 export default function HeaderUser() {
-    const [isLogin, setIsLogin] = useState(false);
-    let location = useLocation();
+	const [isLogin, setIsLogin] = useState(false);
+	let location = useLocation();
 
-    auth().onAuthStateChanged((user) => {
+	auth().onAuthStateChanged((user) => {
 		if (user && user.uid) {
-			setIsLogin(true)
+			setIsLogin(true);
 		}
 	});
-    
+
 	return (
 		<Header className={styles.header} style={{ background: 'white' }}>
 			<div className={styles.wrapperLogo}>
@@ -55,14 +55,8 @@ export default function HeaderUser() {
 						Minh chứng theo tên SV
 					</Link>
 				</Menu.Item>
-				<Menu.Item
-					key="admin-manage-user-by-activity"
-					icon={<AuditOutlined />}
-				>
-					<Link
-						to="/admin-manage-user-by-activity"
-						className={styles.itemText}
-					>
+				<Menu.Item key="admin-manage-user-by-activity" icon={<AuditOutlined />}>
+					<Link to="/admin-manage-user-by-activity" className={styles.itemText}>
 						Minh chứng theo hoạt động
 					</Link>
 				</Menu.Item>

@@ -9,9 +9,10 @@ import {
 	nameLevelRegister,
 	nameOtherBy,
 	nameTypeSort,
-	optionsTargetSuccess,
+	optionsTagTarget,
 } from '../config';
 import { getFilter, saveFilter } from '../utils/common';
+import { compareString } from '../utils/compareFunction';
 import TagRender from './TagRender';
 
 const FilterStudent = (props) => {
@@ -20,7 +21,9 @@ const FilterStudent = (props) => {
 
 	const onFinish = (fieldsValue) => {
 		let { targetSuccess } = fieldsValue;
-		targetSuccess = targetSuccess?.length ? targetSuccess : undefined;
+		targetSuccess = targetSuccess?.length
+			? targetSuccess.sort((a, b) => compareString(a, b))
+			: undefined;
 		saveFilter({ ...fieldsValue, targetSuccess }, location.pathname);
 		props.getData &&
 			props.getData({ ...fieldsValue, targetSuccess, studentCode: undefined });
@@ -80,17 +83,22 @@ const FilterStudent = (props) => {
 						placeholder="Tiêu chí đã hoàn thành"
 						tagRender={TagRender}
 						style={{ minWidth: 200 }}
-						options={optionsTargetSuccess}
+						options={optionsTagTarget}
+						onChange={(value) =>
+							value.includes('none')
+								? form.setFieldsValue({ targetSuccess: ['none'] })
+								: null
+						}
 					/>
 				</Form.Item>
 				<Form.Item noStyle>
 					<Input.Group compact>
-						<Form.Item noStyle name="orderBy">
+						<Form.Item noStyle name="orderBy" initialValue={'lastUpdate'}>
 							<Select placeholder="Xắp xếp theo" style={{ minWidth: 110 }}>
 								{renderSelect(nameOtherBy)}
 							</Select>
 						</Form.Item>
-						<Form.Item noStyle name="sort">
+						<Form.Item noStyle initialValue={'desc'} name="sort">
 							<Select placeholder="Loại sắp xếp" style={{ minWidth: 90 }}>
 								{renderSelect(nameTypeSort)}
 							</Select>

@@ -1,37 +1,36 @@
 import { ExclamationCircleOutlined, ExportOutlined } from '@ant-design/icons';
 import {
-	Button,
-	Card,
-	Layout,
-	message,
-	Modal,
-	Select,
-	Switch,
-	Table,
+    Button,
+    Card,
+    Layout,
+    message,
+    Modal,
+    Select,
+    Switch,
+    Table
 } from 'antd';
 import React, { useRef, useState } from 'react';
 import {
-	deleteRegisterActivity,
-	getActivitiesById,
-	getUserApi,
-	serializerDoc,
-	updateUserActivityApi,
-	updateUserApi,
+    deleteRegisterActivity,
+    getActivitiesById,
+    getUserApi,
+    serializerDoc,
+    updateUserActivityApi,
+    updateUserApi
 } from '../api/firestore';
 import ActivityFeed from '../components/ActivityFeed';
 import ExportStudent from '../components/ExportStudent';
 import FilterStudent from '../components/FilterStudent';
 import InputSelectWithAddItem from '../components/InputSelectWithAddItem';
-import Loading from '../components/Loading';
 import ShowProofImage from '../components/ShowProofImage';
 import TagRender from '../components/TagRender';
 import UserDetail from '../components/UserDetail';
 import {
-	nameLevelActivity,
-	nameLevelRegister,
-	nameTarget,
-	optionProof,
-	optionsTargetSuccess,
+    nameLevelActivity,
+    nameLevelRegister,
+    nameTarget,
+    optionProof,
+    optionsTargetSuccess
 } from '../config';
 import styles from '../styles/Admin.module.css';
 
@@ -184,7 +183,7 @@ export default function AdminManageUser() {
 							setValue={(key) =>
 								Object.values(item.proof || {}).length
 									? handleConfirmActivity(item.id, user.id, key)
-									: showBoxQuestion(item, key)
+									: showBoxQuestion(item.id, user.id, key)
 							}
 							style={{
 								width: '100%',
@@ -196,23 +195,24 @@ export default function AdminManageUser() {
 			},
 		];
 
-		if (!loadingDetail) {
-			return (
-				<Table
-					tableLayout={'unset'}
-					style={{ backgroundColor: '#69c0ff' }}
-					columns={columns}
-					dataSource={Object.values(user.activities).map((c, index) => ({
-						...c.activity,
-						proof: c.proof || {},
-						reason: c.reason,
-						key: index,
-					}))}
-					size="small"
-					pagination={false}
-				/>
-			);
-		} else return <Loading />;
+        return (
+            <Table
+                loading={loadingDetail}
+                tableLayout={'unset'}
+                style={{ backgroundColor: '#69c0ff' }}
+                columns={columns}
+                dataSource={Object.values(user.activities)
+                    .filter((c) => !!c.activity)
+                    .map((c, index) => ({
+                        ...c.activity,
+                        proof: c.proof || {},
+                        reason: c.reason,
+                        key: index,
+                    }))}
+                size="small"
+                pagination={false}
+            />
+        );
 	};
 	const handleChangeTargetSuccess = (targetSuccess, user) => {
 		updateUserApi(user.id, { targetSuccess })
@@ -353,10 +353,16 @@ export default function AdminManageUser() {
 				pagination={false}
 				footer={() => (
 					<div className={styles.itemCenter}>
-						<Button disabled={!userActivity.length} onClick={() => changePage(false)}>
+						<Button
+							disabled={!userActivity.length}
+							onClick={() => changePage(false)}
+						>
 							Trang trước
 						</Button>
-						<Button disabled={!userActivity.length} onClick={() => changePage(true)}>
+						<Button
+							disabled={!userActivity.length}
+							onClick={() => changePage(true)}
+						>
 							Trang sau
 						</Button>
 					</div>

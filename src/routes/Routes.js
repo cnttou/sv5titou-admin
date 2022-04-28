@@ -1,11 +1,9 @@
-import { lazy } from 'react';
 import AdminManageSlide from '../pages/AdminManageSlide';
-
-const AdminManageUserByActivity = lazy(() => import('../pages/AdminManageUserByActivity'));
-const LoginAdmin = lazy(() => import('../pages/LoginAdmin'));
-const PageNotFound = lazy(() => import('../pages/PageNotFound'));
-const AdminManageUser = lazy(() => import('../pages/AdminManageUser'));
-const AdminManageActivity = lazy(() => import('../pages/AdminManageActivity'));
+import AdminManageActivity from '../pages/AdminManageActivity';
+import AdminManageUserByActivity from '../pages/AdminManageUserByActivity';
+import AdminManageUser from '../pages/AdminManageUser';
+import PageNotFound from '../pages/PageNotFound';
+import LoginAdmin from '../pages/LoginAdmin';
 
 const routes = [
 	{

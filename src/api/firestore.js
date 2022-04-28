@@ -1,7 +1,6 @@
 import firebase from './firebase';
 const { documentId } = firebase.firestore.FieldPath;
 import { compareString } from '../utils/compareFunction';
-import { deleteProofImage } from './firebaseStorage';
 import { nonAccentVietnamese } from '../utils/common';
 const { arrayRemove, arrayUnion } = firebase.firestore.FieldValue;
 const { FieldValue } = firebase.firestore;
@@ -56,8 +55,8 @@ export const getUserApi = ({
 	if (classUser) ref = ref.where('classUser', '==', classUser);
 	if (targetSuccess?.length) {
 		if (targetSuccess.includes('none'))
-			ref = ref.where('targetSuccess', 'in', [[]]);
-		else ref = ref.where('targetSuccess', 'in', [targetSuccess]);
+			ref = ref.where('targetSuccess', '==', []);
+		else ref = ref.where('targetSuccess', '==', targetSuccess);
 	}
 	if (orderBy && sort)
 		ref = ref.orderBy(orderBy || 'lastUpdate', sort || 'asc');
@@ -70,60 +69,11 @@ export const getUserExportApi = (classUser, levelReview, targetSuccess) => {
 	let ref = db.collection(USER);
 	if (levelReview) ref = ref.where('levelReview', '==', levelReview);
 	if (classUser) ref = ref.where('classUser', '==', classUser);
-	if (targetSuccess && targetSuccess.length) {
-		if (targetSuccess.includes('none'))
-			ref = ref.where('targetSuccess', 'in', [[]]);
-		else ref = ref.where('targetSuccess', 'in', [targetSuccess]);
-	}
+	if (!targetSuccess?.length) ref = ref.where('targetSuccess', '==', []);
+	else ref = ref.where('targetSuccess', '==', targetSuccess);
+
 	return ref.get();
 };
-
-function getCombinations(valuesArray) {
-	var combi = [];
-	var temp = [];
-	var slent = Math.pow(2, valuesArray.length);
-
-	for (var i = 0; i < slent; i++) {
-		temp = [];
-		for (var j = 0; j < valuesArray.length; j++) {
-			if (i & Math.pow(2, j)) {
-				temp.push(valuesArray[j]);
-			}
-		}
-		if (temp.length > 0) {
-			combi.push(temp);
-		}
-	}
-
-	combi.sort((a, b) => a.length - b.length);
-	console.log(combi.join('\n'));
-	return combi;
-}
-
-// export const testIndexApi = () => {
-// 	const initTest = {
-// 		active: 'true',
-// 		typeActivity: 'register',
-// 		date: '20-12-2022',
-// 		department: 'cntt',
-// 		level: 'lop',
-// 		target: ['hoc-tap'],
-// 	};
-// 	const combination = getCombinations(['department', 'level', 'target']);
-// 	combination.forEach((arr) => {
-// 		const params = { ...initTest };
-// 		Object.keys(params).forEach((key) => {
-// 			if (!arr.includes(key)) params[key] = undefined;
-// 		});
-// 		console.info(params);
-// 		getAllRegisterActivityApi({
-// 			...params,
-// 			limit: 1,
-// 			orderBy: 'createAt',
-// 			sort: 'asc',
-// 		}).catch((error) => console.error(error));
-// 	});
-// };
 
 export const getAllRegisterActivityApi = ({
 	active,
@@ -141,11 +91,14 @@ export const getAllRegisterActivityApi = ({
 }) => {
 	let ref = db.collection(ACTIVITY);
 	if (nameSearch)
-		return ref.where(
-			'nameSearch',
-			'array-contains-any',
-			nonAccentVietnamese(nameSearch).split(/\s+/)
-		).limit(7).get();
+		return ref
+			.where(
+				'nameSearch',
+				'array-contains-any',
+				nonAccentVietnamese(nameSearch).split(/\s+/)
+			)
+			.limit(7)
+			.get();
 	if (typeActivity) ref = ref.where('typeActivity', '==', typeActivity);
 	if (active) ref = ref.where('active', '==', active === 'true');
 	if (date) ref = ref.where('date', '==', date);
@@ -155,11 +108,12 @@ export const getAllRegisterActivityApi = ({
 		ref = ref.where(
 			'target',
 			'array-contains-any',
-			target.sort((a, b) => compareString(b, a))
+			target.sort((a, b) => compareString(a, b))
 		);
-	if (orderBy && sort) ref = ref.orderBy(orderBy || 'lastUpdate', sort || 'asc');
-	if (previous) ref = ref.endBefore(previous[orderBy||'lastUpdate']);
-	if (next) ref = ref.startAfter(next[orderBy||'lastUpdate']);
+	if (orderBy && sort)
+		ref = ref.orderBy(orderBy || 'lastUpdate', sort || 'asc');
+	if (previous) ref = ref.endBefore(previous[orderBy || 'lastUpdate']);
+	if (next) ref = ref.startAfter(next[orderBy || 'lastUpdate']);
 
 	return ref.limit(limit || 10).get();
 };
@@ -170,8 +124,11 @@ export const addActivityApi = (id, data) =>
 
 export const updateActivityApi = (id, data) =>
 	db.collection(ACTIVITY).doc(id).update(data);
-export const updateUserApi = (id, data) =>
-	db.collection(USER).doc(id).update(data);
+export const updateUserApi = (id, data) => {
+	if (data.targetSuccess)
+		data.targetSuccess.sort((a, b) => compareString(a, b));
+	return db.collection(USER).doc(id).update(data);
+};
 
 export const updateUserActivityApi = (id, uid, data) => {
 	const { confirm, reason } = data;
@@ -252,64 +209,4 @@ export const addDataApi = (collection = 'news', data, docId) => {
 			.set(data)
 			.then(() => ({ ...data, id: docId, docId }));
 	}
-};
-export const addUserDetailApi = (uid, targetSuccess) => {
-	return db
-		.collection('register_activity')
-		.doc(uid)
-		.set({ targetSuccess }, { merge: true })
-		.then(() => ({ targetSuccess, uid }))
-		.catch((err) => console.log(err.message));
-};
-export const confirmProofApi = (uid, acId, confirm) => {
-	return db
-		.collection('register_activity')
-		.doc(uid)
-		.update({
-			[`activities.${acId}.confirm`]: confirm,
-		})
-		.then(() => {
-			return { uid, acId, confirm };
-		})
-		.catch((error) => {
-			console.log(error.message);
-		});
-};
-export const cancelConfirmProofApi = (uid, acId, confirm) => {
-	return db
-		.collection('register_activity')
-		.doc(uid)
-		.update({
-			[`activities.${acId}.confirm`]: confirm,
-		})
-		.then(() => {
-			return { uid, acId, confirm };
-		})
-		.catch((error) => {
-			console.log(error.message);
-		});
-};
-export const deleteActivityOfUserByIdApi = (acId = '') => {
-	return db
-		.collection('register_activity')
-		.where('activityId', 'array-contains', acId)
-		.get()
-		.then((querySnapshot) => {
-			const promises = [];
-			querySnapshot.forEach((user) => {
-				console.log('userid will delete', user.id);
-				deleteProofImage(user.id, acId);
-				promises.push(
-					user.ref.update({
-						[`activities.${acId}`]: FieldValue.delete(),
-						activityId: arrayRemove(acId),
-					})
-				);
-			});
-			return Promise.all(promises);
-		})
-		.then(() => {
-			console.log('DONE delete activity by Id');
-		})
-		.catch((error) => console.log(error.message));
 };

@@ -1,5 +1,5 @@
 import { FilterOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Button, Form, Input, Select } from 'antd';
+import { Button, Form, Select } from 'antd';
 import { Option } from 'antd/lib/mentions';
 // import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
@@ -24,6 +24,7 @@ const formLayout = {
 const FilterActivity = (props) => {
 	const [form] = Form.useForm();
 	const location = useLocation();
+	const rules = [{ required: true, message: 'Bạn phải lọc theo trường này' }];
 
 	const onFinish = (fieldsValue) => {
 		let { date, target } = fieldsValue;
@@ -66,27 +67,22 @@ const FilterActivity = (props) => {
 		form.setFieldsValue({ ...data });
 		props.getData && props.getData(data);
 	}, []);
-	const rules = [{ required: true, message: 'Bạn phải lọc theo trường này' }];
+
 	return (
 		<Form {...formLayout} layout="inline" form={form} onFinish={onFinish}>
-			<Form.Item>
-				<Input.Group compact>
-					<Form.Item name="active" rules={rules}>
-						<Select
-							placeholder="Trạng thái hoạt động"
-							style={{ minWidth: 170 }}
-						>
-							<Option key={'true'}>Hoạt động đang hiện</Option>
-							<Option key={'false'}>Hoạt động đã ẩn</Option>
-						</Select>
-					</Form.Item>
-					<Form.Item name="typeActivity" rules={rules}>
-						<Select placeholder="Loại hoạt động" style={{ minWidth: 140 }}>
-							{renderSelect(nameTypeActivity)}
-						</Select>
-					</Form.Item>
-				</Input.Group>
+			<Form.Item name="active" rules={rules} initialValue={'true'}>
+				<Select placeholder="Trạng thái hoạt động" style={{ minWidth: 170 }}>
+					<Option key={'true'}>Hoạt động đang hiện</Option>
+					<Option key={'false'}>Hoạt động đã ẩn</Option>
+				</Select>
 			</Form.Item>
+			<Form.Item name="typeActivity" rules={rules} initialValue={'register'}>
+				<Select placeholder="Loại hoạt động" style={{ minWidth: 160 }}>
+					{renderSelect(nameTypeActivity)}
+				</Select>
+			</Form.Item>
+
+			<Form.Item></Form.Item>
 			<Form.Item
 				noStyle
 				shouldUpdate={(prev, curr) => prev.typeActivity !== curr.typeActivity}
@@ -147,39 +143,32 @@ const FilterActivity = (props) => {
 					) : null
 				}
 			</Form.Item> */}
-			<Form.Item>
-				<Input.Group compact>
-					<Form.Item name="orderBy" initialValue={'lastUpdate'}>
-						<Select placeholder="Xắp xếp theo" style={{ minWidth: 100 }}>
-							{renderSelect(nameOtherBy)}
-						</Select>
-					</Form.Item>
-					<Form.Item name="sort" initialValue={'desc'} noStyle>
-						<Select placeholder="Loại sắp xếp" style={{ minWidth: 100 }}>
-							{renderSelect(nameTypeSort)}
-						</Select>
-					</Form.Item>
-				</Input.Group>
+			<Form.Item name="orderBy" initialValue={'lastUpdate'}>
+				<Select placeholder="Xắp xếp theo" style={{ minWidth: 120 }}>
+					{renderSelect(nameOtherBy)}
+				</Select>
+			</Form.Item>
+			<Form.Item name="sort" initialValue={'desc'} noStyle>
+				<Select placeholder="Loại sắp xếp" style={{ minWidth: 100 }}>
+					{renderSelect(nameTypeSort)}
+				</Select>
+			</Form.Item>
+			<Form.Item></Form.Item>
+			<Form.Item wrapperCol={{ span: 14, offset: 4 }}>
+				<Button icon={<FilterOutlined />} htmlType="submit">
+					Lọc
+				</Button>
 			</Form.Item>
 			<Form.Item>
-				<Input.Group compact>
-					<Form.Item wrapperCol={{ span: 14, offset: 4 }}>
-						<Button icon={<FilterOutlined />} htmlType="submit">
-							Lọc
-						</Button>
-					</Form.Item>
-					<Form.Item>
-						<Button
-							type="primary"
-							icon={<ReloadOutlined />}
-							onClick={() => {
-								form.resetFields();
-							}}
-						>
-							Đặt lại
-						</Button>
-					</Form.Item>
-				</Input.Group>
+				<Button
+					type="primary"
+					icon={<ReloadOutlined />}
+					onClick={() => {
+						form.resetFields();
+					}}
+				>
+					Đặt lại
+				</Button>
 			</Form.Item>
 		</Form>
 	);

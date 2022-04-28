@@ -1,19 +1,16 @@
-import { Button, Card, Form, Input, Select } from 'antd';
+import { Button, Card, Form, Input, message, Select } from 'antd';
 import { Option } from 'antd/lib/mentions';
 import { useState } from 'react';
 import { CSVLink } from 'react-csv';
+import { getUserExportApi, serializerDoc } from '../api/firestore';
 import {
-    getUserExportApi,
-    serializerDoc
-} from '../api/firestore';
-import {
-    fieldPersonal,
-    nameDepartmentActivity,
-    nameLevelRegister,
-    nameMajors,
-    nameSex,
-    nameTarget,
-    optionsTargetSuccess
+	fieldPersonal,
+	nameDepartmentActivity,
+	nameLevelRegister,
+	nameMajors,
+	nameSex,
+	nameTarget,
+	optionsTargetSuccess,
 } from '../config';
 import { compareString } from '../utils/compareFunction';
 
@@ -46,34 +43,29 @@ const tailLayout = {
 const ExportStudent = () => {
 	const [csvData, setCsvData] = useState([]);
 	const [loadingExport, setLoadingExport] = useState(false);
+	const [form] = Form.useForm();
 
 	const getProofActivity = (activities = [], confirmed) => {
 		const result = { ...initRestExportData };
 		for (var activity of activities) {
 			if (!confirmed.includes(activity.id)) continue;
-			if (activity.typeActivity === 'require') {
-				Object.values(activity.proof).forEach((image) => {
+			Object.values(activity.proof).forEach(({ typeActivity, ...image }) => {
+				if (typeActivity === 'require') {
 					if (image.target === 'hoc-tap') {
 						result.requireHocTap.push(image.url);
 					} else if (image.target === 'dao-duc') {
 						result.requireDaoDuc.push(image.url);
 					}
-				});
-			} else if (activity.typeActivity === 'other') {
-				Object.values(activity.proof).forEach((image) => {
+				} else {
 					if (image.target === 'hoc-tap') {
 						result.otherHocTap.push(image.url);
 					} else if (image.target === 'dao-duc') {
 						result.otherDaoDuc.push(image.url);
-					}
-				});
-			} else {
-				Object.values(activity.proof).forEach((image) => {
-					if (image.target === 'tieu-bieu-khac') {
+					} else if (image.target === 'tieu-bieu-khac') {
 						result.targetOtherSuccess.push(image.url);
 					} else if (image.target === 'hoi-nhap') {
 						result.targetHoiNhap.push(image.url);
-					} else if (image.target === 'ky-nang') {
+					} else if (image.target === 've-ky-nang') {
 						result.targetKyNang.push(image.url);
 					} else if (image.target === 've-ngoai-ngu') {
 						result.targetNgoaiNgu.push(image.url);
@@ -82,8 +74,8 @@ const ExportStudent = () => {
 					} else if (image.target === 'the-luc') {
 						result.targetTheLuc.push(image.url);
 					}
-				});
-			}
+				}
+			});
 		}
 		return result;
 	};
@@ -94,9 +86,15 @@ const ExportStudent = () => {
 		const users = await getUserExportApi(
 			classUser,
 			levelReview,
-			targetSuccess.sort((a, b) => compareString(b, a))
-		).then(serializerDoc);
-
+			targetSuccess?.sort((a, b) => compareString(a, b))
+		)
+			.then(serializerDoc)
+			.catch((error) => console.error(error));
+		if (!users.length) {
+			message.warn('Không có sinh viên nào thỏa điều kiện.');
+			setLoadingExport(false);
+			return;
+		}
 		const dataExport = users.map((user) => ({
 			...user,
 			sex: nameSex[user.sex],
@@ -106,16 +104,27 @@ const ExportStudent = () => {
 			majors: nameMajors[user.majors],
 			department: nameDepartmentActivity[user.department],
 			levelReview: nameLevelRegister[user.levelReview],
-			...getProofActivity(Object.entries(user.activities).map(([id, value])=>({id, ...value})), user.confirm),
+			...getProofActivity(
+				Object.entries(user.activities).map(([id, value]) => ({
+					id,
+					...value,
+				})),
+				user.confirm
+			),
 		}));
 
 		setCsvData(dataExport);
 		setLoadingExport(false);
 	};
-
+	const rules = [{ required: true, message: 'Bạn phải lọc theo trường này' }];
+	const doReset = () => {
+		form.resetFields();
+		setLoadingExport(false);
+		setCsvData([]);
+	};
 	return (
 		<Card>
-			<Form {...layout} onFinish={onFinfishExportForm}>
+			<Form {...layout} onFinish={onFinfishExportForm} form={form}>
 				<Form.Item label="Chọn lớp" name="classUser">
 					<Input placeholder="Lọc theo lớp" />
 				</Form.Item>
@@ -123,7 +132,7 @@ const ExportStudent = () => {
 					label="Cấp xét"
 					name="levelReview"
 					initialValues="xet-cap-khoa"
-					required
+					rules={rules}
 				>
 					<Select placeholder="Lọc theo cấp xét">
 						{Object.entries(nameLevelRegister).map((c) => (
@@ -133,7 +142,7 @@ const ExportStudent = () => {
 						))}
 					</Select>
 				</Form.Item>
-				<Form.Item label="Tiêu chí" name="targetSuccess" required>
+				<Form.Item label="Tiêu chí" name="targetSuccess">
 					<Select
 						mode="tags"
 						maxTagCount="responsive"
@@ -156,6 +165,13 @@ const ExportStudent = () => {
 							Xuất dữ liệu
 						</Button>
 					)}
+					<Button
+						htmlType="button"
+						onClick={doReset}
+						disabled={!csvData.length && !loadingExport}
+					>
+						Hủy
+					</Button>
 				</Form.Item>
 			</Form>
 		</Card>
